@@ -11,6 +11,7 @@ public class ResourceBuildDeltaVisitor implements IResourceDeltaVisitor {
 		
 		// build the specified resource
 		// return true to continue visiting children
+		System.out.println(String.format("QIVICONBUILDER: Incremental builder for %s", res.getFullPath().toOSString()));
 		return true;
 	}
 

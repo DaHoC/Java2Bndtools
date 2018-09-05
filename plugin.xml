@@ -9,4 +9,11 @@
 			</run>
 		</builder>
 	</extension>
+	<extension point="org.eclipse.core.resources.natures" id="qiviconbuildernature" name="QIVICON Builder Nature">
+		<runtime>
+			<run class="com.qivicon.testbuilder.QiviconBuilderNature">
+			</run>
+		</runtime>
+		<requires-nature id="org.eclipse.jdt.core.javanature"/>
+	</extension>
 </plugin>
