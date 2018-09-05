@@ -8,10 +8,9 @@ public class ResourceBuildDeltaVisitor implements IResourceDeltaVisitor {
 
 	@Override
 	public boolean visit(final IResourceDelta res) throws CoreException {
-		
 		// build the specified resource
 		// return true to continue visiting children
-		System.out.println(String.format("QIVICONBUILDER: Incremental builder for %s", res.getFullPath().toOSString()));
+		System.out.println(String.format("QIVICONBUILDER: Incremental builder for %s (doing nothing atm)", res.getFullPath().toOSString()));
 		return true;
 	}
 

@@ -7,7 +7,8 @@ Bundle-Activator: com.qivicon.testbuilder.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
- org.eclipse.jdt.core
+ org.eclipse.jdt.core,
+ biz.aQute.bndlib
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: TestBuilder
 Bundle-ActivationPolicy: lazy

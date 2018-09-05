@@ -67,9 +67,8 @@ public class ResourceBuildVisitor implements IResourceVisitor {
 			return true;
 		}
 		try {
-			System.err.println("Adding file " + res.getName() + " = " + res.getFullPath() + " -/- " + res.getProjectRelativePath() + " JAVA outdir=" + javaBuilderOutputFolder.toString());
 			// TODO Add path relative to project directory, do not put full path into zip
-			jarZipper.add(res);
+			jarZipper.add(res, javaOutputFolderRelativePathToProjectWithoutProjectNameItself);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
