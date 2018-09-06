@@ -5,12 +5,17 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
+import java.util.jar.Manifest;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import org.eclipse.core.commands.operations.OperationStatus;
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -23,9 +28,20 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.jarpackager.JarBuilder;
+import org.eclipse.jdt.internal.ui.jarpackager.JarFileExportOperation;
+import org.eclipse.jdt.internal.ui.jarpackager.JarPackagerUtil;
+import org.eclipse.jdt.internal.ui.jarpackager.ManifestProvider;
+import org.eclipse.jdt.internal.ui.jarpackager.PlainJarBuilder;
+import org.eclipse.jdt.ui.jarpackager.IJarBuilder;
+import org.eclipse.jdt.ui.jarpackager.IManifestProvider;
+import org.eclipse.jdt.ui.jarpackager.JarPackageData;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import aQute.bnd.build.Workspace;
 import aQute.bnd.service.RepositoryListenerPlugin;
 import aQute.bnd.service.RepositoryPlugin;
@@ -55,7 +71,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	 */
 	static final String BND_WORKSPACE_REPO_NAME = "Local";
 	File targetArchiveFile;
-	
+
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 		// kind is one of FULL_BUILD, INCREMENTAL_BUILD, AUTO_BUILD, CLEAN_BUILD
 		switch (kind) {
@@ -104,32 +120,138 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 			throw new CoreException(status);
 		}
 		final IPath javaBuilderOutputFolder = outputFolderOpt.get();
-
-		try (final JarZipper jarZipper = setupBuildTarget()) {
-			// TODO Do we need this visitor? Or do we simply zip the target folder w/o
-			// visitor?
-			final IResourceVisitor resourceVisitor = new ResourceBuildVisitor(jarZipper, javaBuilderOutputFolder);
-			getProject().accept(resourceVisitor);
-		} catch (CoreException e) {
-			// Rethrow this
-			throw e;
-		} catch (IOException e) {
-			// Can occur when file operations (reading, writing to JAR file fails)
-			System.err.println(BUILDER_ID + ": " + e.getMessage());
-			e.printStackTrace();
-		} catch (Exception e) {
-			// Can occur when .close() operation on jarZipper fails
-			System.err.println(BUILDER_ID + ": " + e.getMessage());
-			e.printStackTrace();
+		
+		// TODO Do not make this absemmeln, but rather skip this project or display/log a nice hint that the builder could not proceed
+		final Optional<IPath> manifestLocationOpt = getManifestLocation();
+		if (!manifestLocationOpt.isPresent()) {
+			final String errorMessage = BUILDER_ID + ": " + getProject().getName() + " MANIFEST.MF file not found, aborting build!";
+			final IStatus status = new OperationStatus(4, QiviconBuilder.BUILDER_ID, -1, errorMessage, new Throwable(errorMessage));
+			throw new CoreException(status);
 		}
+
+		System.err.println("Manifest full path: " + manifestLocationOpt.get().toString());
+		// Reuse and invoke the internal Eclipse JAR exporter
+		// jarPackage an object containing all required information to make an export
+		final JarPackageData jarPackage = new JarPackageData();
+		// TODO Check if I explicitly need to add the Manifest
+		jarPackage.setManifestLocation(manifestLocationOpt.get());
+		IFile manifestFile = jarPackage.getManifestFile();
+		boolean manifestFileExists = manifestFile.exists();
+/*
+		final IManifestProvider manifestProvider = new ManifestProvider();
+		final Manifest manifest = manifestProvider.create(jarPackage);
+		jarPackage.setManifestProvider(manifestProvider);
+*/
+		jarPackage.setUsesManifest(true);
+		jarPackage.setSaveManifest(false);
+		jarPackage.setGenerateManifest(false);
+		jarPackage.setReuseManifest(false);
+
+		// TODO Outsource, check if this project is even a Java project
+		final IJavaProject jproject = JavaCore.create(getProject());
+		final IJavaProject[] elements = new IJavaProject[1];
+		elements[0] = jproject;
+		jarPackage.setElements(elements);
+		jarPackage.setExportClassFiles(true);
+		jarPackage.setExportOutputFolders(true);
+		jarPackage.setExportJavaFiles(false);
+		jarPackage.setRefactoringAware(false);
+		jarPackage.setUseSourceFolderHierarchy(true);
+		jarPackage.setSaveDescription(false);
+		jarPackage.setDescriptionLocation(new Path(""));
+		jarPackage.setCompress(true);
+		jarPackage.setIncludeDirectoryEntries(true);
+		jarPackage.setOverwrite(true);
+		jarPackage.setBuildIfNeeded(true);
+		
+		// TODO Change the location
+//		final IPath jarPath = getProject().getProjectRelativePath().append("tmp.jar");
+		IPath jarPath = Path.fromOSString("/home/janhendriks/projects/bnd/qivicon-develop/runtime-EclipseApplication/TestForeignproject/tmp.jar");
+		if (jarPath.getFileExtension() == null) {
+			jarPath = jarPath.addFileExtension("jar");
+		}
+		
+		jarPackage.setJarLocation(jarPath);
+		try {
+			jarPath.toFile().getAbsoluteFile().createNewFile();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		final Shell shell = getShell();
+		final JarFileExportOperation jarFileExportOperation = new JarFileExportOperation(jarPackage, shell);
+		try {
+			jarFileExportOperation.run(monitor);
+		} catch (InvocationTargetException | InterruptedException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+//		IPath destinationPath = getProject().getFullPath().removeFirstSegments(leadingSegmentsToRemove);
+//		jarBuilder.writeFile((IFile) resource, destinationPath);
+
+/*
+		jarPath.toFile().delete();
+		
+		System.err.println("JAR created @ " + jarPackage.getJarLocation());
+		// Reminder for convenience methods
+		JarPackagerUtil.getMetaEntry();
+		
+//		IJarBuilder jarBuilder = jarPackage.createPlainJarBuilder();
+		IJarBuilder jarBuilder = jarPackage.getJarBuilder();
+		jarBuilder.open(jarPackage, shell, null);
+
+		final IFile targetFile = getProject().getFile(jarPath);
+/*
+//		File tempFile;
+			IPath tmpEclFile = getProject().getProjectRelativePath();
+//			tempFile = File.createTempFile(BUILDER_ID + "-", ".jar", new File(getProject().getLocationURI()));
+//			System.err.println("TEMP file created @ " + tempFile.getAbsolutePath());
+			final IFile targetFile = getProject().getFile(tmpEclFile.append("temp.jar"));
+			try {
+				new File(targetFile.getLocationURI()).createNewFile();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+*/
+			// Add resource to Jar file
+//			jarBuilder.writeFile(targetFile, getProject().getProjectRelativePath().append("src"));
+
+//		jarBuilder.close();
+
+/*
+		try (final ZipFile z2 = JarPackagerUtil.getArchiveFile(jarPackage.getJarLocation())) {
+			jarBuilder.writeArchive(z2, monitor);
+		} catch (IOException e3) {
+			// TODO Auto-generated catch block
+			e3.printStackTrace();
+		}
+*/
+/*
+		ZipFile zipFile;
+		try {
+			final File tempFile = File.createTempFile(BUILDER_ID + "-", ".jar");
+			System.err.println("ZIP created @ " + tempFile.getAbsolutePath());
+			zipFile = new ZipFile(jarPackage.getJarLocation().toFile());
+			zipFile = new ZipFile(tempFile);
+			jarBuilder.writeArchive(zipFile, monitor);
+		} catch (ZipException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+*/		
+		
 		// JAR file should have been created, copy it into the bndtools workspace repo
 		final Optional<RepositoryPlugin> bndWorkspaceRepository = getBndWorkspaceRepository();
 		if (!bndWorkspaceRepository.isPresent()) {
 			return;
 		}
-		try (final InputStream jarFileInputStream = new FileInputStream(targetArchiveFile)) {
+		try (final InputStream jarFileInputStream = new FileInputStream(jarPackage.getJarLocation().toFile())) {
 			try {
-				System.err.println(String.format("Copying file %s into %s", targetArchiveFile.getPath(), bndWorkspaceRepository.get().getLocation()));
+				System.err.println(String.format("Copying file %s into %s", jarPackage.getJarLocation().toString(), bndWorkspaceRepository.get().getLocation()));
 
 				putFileToBndRepository(jarFileInputStream, bndWorkspaceRepository.get());
 			} catch (Exception e) {
@@ -145,41 +267,29 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		}
 	}
 
-	private JarZipper setupBuildTarget() throws IOException, CoreException {
-		// Get the manifest from project
-//		final URI projectLocation = getProject().getLocationURI();
-//		File manifestFile = new File(projectLocation.getPath() + "/META-INF/MANIFEST.MF");
+	/**
+	 * Returns the active shell
+	 * @return the active shell
+	 */
+	protected Shell getShell() {
+		return JavaPlugin.getActiveWorkbenchShell();
+	}
+
+	// 
+	/**
+	 * Get the manifest from project.
+	 * TODO Consider fallback to search for MANIFEST.MF in the build output folder, as it may have been generated
+	 * 
+	 * @return optional containing manifest location or empty optional if not found
+	 */
+	private Optional<IPath> getManifestLocation() {
 		final IResource manifestFileResource = getProject().findMember("META-INF/MANIFEST.MF");
-		// TODO Consider fallback to search for MANIFEST.MF in the build output folder,
-		// it may have been generated
-		if (manifestFileResource == null) {
-			// Abort builder, as it will not be a valid JAR file without MANIFEST
-			// TODO Do not make this absemmeln, but rather a nice hint that the builder could not proceed
-			final String errorMessage = BUILDER_ID + ": " + getProject().getName() + " MANIFEST.MF file not found, aborting build!";
-			final IStatus status = new OperationStatus(4, QiviconBuilder.BUILDER_ID, -1, errorMessage,
-					new Throwable(errorMessage));
-			throw new CoreException(status);
+		if (manifestFileResource == null || !manifestFileResource.exists()) {
+			// Skip or abort builder, as it will not be a valid JAR file without MANIFEST
+			return Optional.empty();
 		}
 		System.out.println("MANIFEST.MF found @ " + manifestFileResource.getProjectRelativePath());
-//		final File manifestFile = new File(manifestFileResource.getLocationURI());
-		final IFolder qiviconBuilderTargetFolder = getQiviconBuilderTargetFolder();
-		if (!qiviconBuilderTargetFolder.exists()) {
-			qiviconBuilderTargetFolder.getLocation().toFile().mkdirs();
-		}
-		final File targetQiviconBuilderOutputFolder = new File(qiviconBuilderTargetFolder.getLocationURI());
-		if (!targetQiviconBuilderOutputFolder.exists()) {
-			targetQiviconBuilderOutputFolder.mkdirs();
-		}
-		targetArchiveFile = new File(targetQiviconBuilderOutputFolder.getPath() + "/" + BUILDER_OUTPUTFILE);
-		if (!targetArchiveFile.exists()) {
-			System.err.println(BUILDER_ID + ": Target JAR file not found, (re)creating it!");
-//			archiveFile.mkdirs();
-			targetArchiveFile.createNewFile();
-		} else {
-			// TODO Even if it exists, delete it beforehand when a full built is done
-//			archiveFile.delete();
-		}
-		return new JarZipper(targetArchiveFile, manifestFileResource);
+		return Optional.ofNullable(manifestFileResource.getFullPath());
 	}
 
 	private IFolder getQiviconBuilderTargetFolder() {
