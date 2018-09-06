@@ -44,7 +44,7 @@ The `META-INF/MANIFEST.MF` of the "foreign" Java project has to have the followi
 ## How to use?
 
 ## Open issues
-1. Versioning (missing)
-1. Support several (non-default) output folders, also for non-java src folders (e.g. groovy support)
 1. Refactor and cleanup of this mess, e.g. make not that verbose by introducing a "debug" flag
+1. Support several (non-default) output folders, also for non-java src folders (e.g. groovy support)
+1. Support incremental builds (to some extent)?
 
