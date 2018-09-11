@@ -6,10 +6,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceDelta;
@@ -22,8 +29,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.jarpackager.IJarExportRunnable;
 import org.eclipse.jdt.ui.jarpackager.JarPackageData;
 import org.eclipse.ui.console.ConsolePlugin;
@@ -52,6 +61,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	static final String BUILDER_ID = "com.qivicon.testbuilder.qiviconbuilder";
 	static final String BUILDER_NAME = "QIVICON bnd builder";
 	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
+	static final String EXCLUDE_LOCATION = "META-INF/exclude.properties";
 	static final int INTERNAL_ERROR = -10001;
 
 	/**
@@ -62,6 +72,10 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	static final String BND_WORKSPACE_REPO_NAME = "Local";
 	
 	private MessageConsoleStream consoleStream;
+	// Folders to exclude from export (case-sensitive)
+	private Collection<String> excludeFolders;
+	// Files to exclude from export (case-sensitive)
+	private Collection<String> excludeFiles;
 
 	@Override
 	protected IProject[] build(int kind, @SuppressWarnings("rawtypes") Map args, IProgressMonitor monitor) throws CoreException {
@@ -123,11 +137,11 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 			return Optional.empty();
 		}
 
-		final IJavaProject jproject = JavaCore.create(getProject());
-		// Check if this project is even a Java project
-		if (jproject == null) {
-			final String errorMessage = String.format("%s project %s is not a Java project (anymore)!", BUILDER_ID, getProject().getName());
-			log(errorMessage);
+		readFilesAndFoldersToExclude();
+
+		final Object[] exportElements = retrieveSelectedElementsToExport();
+		if (exportElements == null || exportElements.length == 0) {
+			log(String.format("%s project %s: Nothing to export", BUILDER_ID, getProject().getName()));
 			return Optional.empty();
 		}
 
@@ -140,7 +154,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		jarPackage.setSaveManifest(false);
 		jarPackage.setGenerateManifest(false);
 		jarPackage.setReuseManifest(false);
-		jarPackage.setElements(new IJavaProject[] {jproject});
+		jarPackage.setElements(exportElements);
 		jarPackage.setExportClassFiles(true);
 		jarPackage.setExportOutputFolders(true);
 		jarPackage.setExportJavaFiles(false);
@@ -178,6 +192,94 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 			throw createCoreException(errorMessage, e);
 		}
 		return Optional.of(jarPackage.getJarLocation().toFile());
+	}
+
+	/**
+	 * Filters over all project resources and excludes files and directories mentioned in {@link #EXCLUDE_FILES} and {@link #EXCLUDE_DIRECTORIES} respectively.
+	 * Iteration is internally split up by java resources and non-java resources.
+	 * According to Eclipse source, the returned elements must be (a mix) of type IJavaProject, IJavaElement, IResource, IFile, ..?
+	 * 
+	 * @return elements of type IJavaProject, IJavaElement, IResource, IFile,...
+	 * @throws JavaModelException thrown by the call to get java or non-java project resources
+	 */
+	private Object[] retrieveSelectedElementsToExport() throws JavaModelException {
+		final Optional<IJavaProject> jprojectOpt = retrieveJavaProject();
+		if (!jprojectOpt.isPresent()) {
+			return new Object[0];
+		}
+
+		final Collection<Object> selectedElements = new LinkedHashSet<>();
+		// Gather java-specific resources
+		final Collection<Object> javaResources = collectJavaResources(jprojectOpt.get());
+		selectedElements.addAll(javaResources);
+
+		// Gather non-java specific resources
+		final Collection<Object> nonJavaResources = collectNonJavaResources(jprojectOpt.get());
+		selectedElements.addAll(nonJavaResources);
+		
+		return selectedElements.toArray();
+	}
+
+	private Optional<IJavaProject> retrieveJavaProject() {
+		// Check if this project is even a Java project
+		IJavaProject jproject = null;
+		try {
+			if (getProject().hasNature(JavaCore.NATURE_ID)) {
+				jproject = JavaCore.create(getProject());
+			}
+		} catch (CoreException ex) {
+			final String errorMessage = String.format("%s cannot obtain nature of project %s: %s!", BUILDER_ID, getProject().getName(), ex.getMessage());
+			log(errorMessage);
+			return Optional.empty();
+		}
+		
+		if (jproject == null || !jproject.exists()) {
+			final String errorMessage = String.format("%s project %s is not a Java project (anymore)!", BUILDER_ID, getProject().getName());
+			log(errorMessage);
+			return Optional.empty();
+		}
+		return Optional.ofNullable(jproject);
+	}
+
+	private Collection<Object> collectJavaResources(final IJavaProject jproject) throws JavaModelException {
+		final IJavaElement[] projectChildren = jproject.getChildren();
+		if (projectChildren == null) {
+			return Collections.emptySet();
+		}
+		final Collection<Object> selectedElements = new LinkedHashSet<>(projectChildren.length);
+		for (final IJavaElement javaElement : projectChildren) {
+			log(String.format("Project java element %s encountered", javaElement.getElementName()));
+			selectedElements.add(javaElement);
+		}
+		return selectedElements;
+	}
+
+	private Collection<Object> collectNonJavaResources(final IJavaProject jproject) throws JavaModelException {
+		final Object[] projectNonJavaChildren = jproject.getNonJavaResources();
+		if (projectNonJavaChildren == null) {
+			return Collections.emptySet();
+		}
+		final Collection<Object> selectedElements = new LinkedHashSet<>(projectNonJavaChildren.length);
+		for (final Object nonJavaElement : projectNonJavaChildren) {
+			if (nonJavaElement instanceof IFile) {
+				final IFile nonJavaFile = (IFile)nonJavaElement;
+				log(String.format("Project non-java file %s encountered", nonJavaFile.getName()));
+				if (!excludeFiles.contains(nonJavaFile.getName())) {
+					selectedElements.add(nonJavaFile);
+				}
+			} else
+			if (nonJavaElement instanceof IFolder) {
+				final IFolder nonJavaFolder = (IFolder)nonJavaElement;
+				log(String.format("Project non-java folder %s encountered", nonJavaFolder.getName()));
+				if (!excludeFolders.contains(nonJavaFolder.getName())) {
+					selectedElements.add(nonJavaFolder);
+				}
+			} else {
+				// We do not know what type it is and we do not actually care, just take it
+				selectedElements.add(nonJavaElement);
+			}
+		}
+		return selectedElements;
 	}
 
 	private void copyJarFileIntoBndWorkspaceRepository(final File jarFile) throws CoreException {
@@ -275,6 +377,33 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		return qiviconBuilderIndex > javaBuilderIndex;
 	}
 
+	private void readFilesAndFoldersToExclude() throws CoreException {
+		if (this.excludeFolders != null && this.excludeFiles != null) {
+			return;
+		}
+		final Properties properties = new Properties();
+
+		try (final InputStream input = getClass().getClassLoader().getResourceAsStream(EXCLUDE_LOCATION)) {
+			properties.load(input);
+			final String foldersProperty = properties.getProperty("folders");
+			final String filesProperty = properties.getProperty("files");
+			if (foldersProperty == null || filesProperty == null) {
+				// Wrap into CoreException
+				final String message = String.format("Could not read properties file %s values!", EXCLUDE_LOCATION);
+				throw createCoreException(message, null);
+			}
+			final String[] excludeFoldersArr = foldersProperty.split(",");
+			final String[] excludeFilesArr = filesProperty.split(",");
+			log("Exclude folders=" + Arrays.toString(excludeFoldersArr));
+			log("Exclude files=" + Arrays.toString(excludeFilesArr));
+			this.excludeFolders = Arrays.asList(excludeFoldersArr);
+			this.excludeFiles = Arrays.asList(excludeFilesArr);
+		} catch (IOException e) {
+			// Wrap into CoreException
+			final String message = String.format("Could not read properties file %s!", EXCLUDE_LOCATION);
+			throw createCoreException(message, e);
+		}
+	}
 	/**
 	 * Creates a <code>CoreException</code> with the given parameters.
 	 *
