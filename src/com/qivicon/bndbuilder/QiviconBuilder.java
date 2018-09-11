@@ -1,4 +1,4 @@
-package com.qivicon.testbuilder;
+package com.qivicon.bndbuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +58,7 @@ import aQute.bnd.service.RepositoryPlugin;
 public class QiviconBuilder extends IncrementalProjectBuilder {
 
 	static final boolean DEBUG_OUTPUT = true;
-	static final String BUILDER_ID = "com.qivicon.testbuilder.qiviconbuilder";
+	static final String BUILDER_ID = "com.qivicon.bndbuilder.qiviconbndbuilder";
 	static final String BUILDER_NAME = "QIVICON bnd builder";
 	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
 	static final String EXCLUDE_LOCATION = "META-INF/exclude.properties";

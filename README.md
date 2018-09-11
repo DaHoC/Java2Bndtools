@@ -21,11 +21,11 @@ Eclipse PDE builder plug-in to provide arbitrary build artifacts as bundles to a
 ## How to use?
 You need an Eclipse workspace containing
 
-	* a bnd workspace with the mandatory bnd cnf project folder
-	* a bnd workspace repository called "Local"
-	* a Java project (containing the org.eclipse.jdt.core.javanature nature and a META-INF/MANIFEST.MF file) in the same Eclipse workspace
+* a bnd workspace with the mandatory bnd cnf project folder
+* a bnd workspace repository called "Local"
+* a Java project (containing the org.eclipse.jdt.core.javanature nature and a META-INF/MANIFEST.MF file) in the same Eclipse workspace
 
-For the Java project add the `com.qivicon.testbuilder.qiviconbuildernature` and `buildCommand` `com.qivicon.testbuilder.qiviconbuilder` as last build entry as shown in the following `.project` entries / builder:
+For the Java project add the `com.qivicon.bndbuilder.qiviconbndbuildernature` and `buildCommand` `com.qivicon.bndbuilder.qiviconbndbuilder` as last build entry as shown in the following `.project` entries / builder:
 
 	<?xml version="1.0" encoding="UTF-8"?>
 	<projectDescription>
@@ -37,14 +37,14 @@ For the Java project add the `com.qivicon.testbuilder.qiviconbuildernature` and 
 				</arguments>
 			</buildCommand>
 			<buildCommand>
-				<name>com.qivicon.testbuilder.qiviconbuilder</name>
+				<name>com.qivicon.bndbuilder.qiviconbndbuilder</name>
 				<arguments>
 				</arguments>
 			</buildCommand>
 		</buildSpec>
 		<natures>
 			<nature>org.eclipse.jdt.core.javanature</nature>
-			<nature>com.qivicon.testbuilder.qiviconbuildernature</nature>
+			<nature>com.qivicon.bndbuilder.qiviconbndbuildernature</nature>
 		</natures>
 	</projectDescription>
 

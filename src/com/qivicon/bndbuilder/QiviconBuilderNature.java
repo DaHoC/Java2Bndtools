@@ -1,4 +1,4 @@
-package com.qivicon.testbuilder;
+package com.qivicon.bndbuilder;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -12,7 +12,7 @@ import org.eclipse.core.runtime.CoreException;
 
 public class QiviconBuilderNature implements IProjectNature {
 
-	static final String NATURE_ID = "com.qivicon.testbuilder.qiviconbuildernature";
+	static final String NATURE_ID = "com.qivicon.bndbuilder.qiviconbndbuildernature";
 
 	private IProject project;
 
