@@ -5,18 +5,21 @@ Eclipse PDE builder plug-in to provide arbitrary build artifacts as bundles to a
 1. Incremental Builder
 1. Project nature
 
+![Example Eclipse flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/ExampleFlow.jpg "Example Eclipse flow")
+
 ## Prerequisites
 1. Eclipse workspace with bndtools workspace with bnd repository named "Local"
 1. Same Eclipse workspace containing a Java project
 1. The `META-INF/MANIFEST.MF` of the Java project must be present, readable and must have the following attributes (`Bundle-Version` defaults to `0.0.0` if not specified), mind the mandatory newline at the end:
 
 	Manifest-Version: 1.0
-	Name: Acme Dummy
 	Bundle-Name: Dummy project
 	Bundle-SymbolicName: com.foo.bar
 	Bundle-ManifestVersion: 2
 	Bundle-Version: 2.0.0
-	
+
+## How to install?
+TODO
 
 ## How to use?
 You need an Eclipse workspace containing
@@ -80,3 +83,4 @@ It is automatically overwritten for each new full build and the bnd workspace re
 1. Integrate correct progress meter (currently unused)
 1. Develop strategy to mark projects that the plugin should consider, i.e. set the nature and builder by selection
 1. Provide a good way to ship this plugin to team developers
+1. Check if there is nothing preventing this project to become open-source

@@ -4,12 +4,10 @@
 	<extension id="qiviconbndbuilder" name="QIVICON bnd builder" point="org.eclipse.core.resources.builders">
 		<builder>
 			<run class="com.qivicon.bndbuilder.QiviconBuilder">
-				<parameter name="optimize" value="true" />
-				<parameter name="comment" value="QIVICON Builder" />
 			</run>
 		</builder>
 	</extension>
-	<extension point="org.eclipse.core.resources.natures" id="qiviconbndbuildernature" name="QIVICON bnd builder Nature">
+	<extension id="qiviconbndbuildernature" name="QIVICON bnd builder Nature" point="org.eclipse.core.resources.natures">
 		<runtime>
 			<run class="com.qivicon.bndbuilder.QiviconBuilderNature">
 			</run>
