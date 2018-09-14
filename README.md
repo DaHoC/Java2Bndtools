@@ -79,6 +79,7 @@ This temporary JAR file is passed via stream to the bnd workspace "Local" reposi
 It is automatically overwritten for each new full build and the bnd workspace repository is refreshed automatically.
 
 ## Open issues & to-do
+1. Fix that if the Qivicon bnd builder nature is added to the project, the project is configured with the builder accordingly
 1. Support incremental builds to some extent
 1. Integrate correct progress meter (currently unused)
 1. Develop strategy to mark projects that the plugin should consider, i.e. set the nature and builder by selection

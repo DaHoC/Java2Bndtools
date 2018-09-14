@@ -9,16 +9,21 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.ui.console.MessageConsoleStream;
 
+/**
+ * Nature for the corresponding Qivicon bnd builder.
+ */
 public class QiviconBuilderNature implements IProjectNature {
 
 	static final String NATURE_ID = "com.qivicon.bndbuilder.qiviconbndbuildernature";
 
+	private MessageConsoleStream consoleStream;
 	private IProject project;
 
 	@Override
 	public void configure() throws CoreException {
-		System.out.println("QIVICONBUILDER: configure called");
+		log("QIVICONBUILDER: configure called");
 		/*
 		 * Adds nature-specific information to the project. Here: adding a builder to a
 		 * project's build specification)
@@ -46,12 +51,12 @@ public class QiviconBuilderNature implements IProjectNature {
 			desc.setBuildSpec(newCommands);
 			project.setDescription(desc, null);
 		}
-		System.out.println(String.format("QIVICONBUILDER: configure finished for %s", Arrays.asList(desc.getBuildSpec())));
+		log(String.format("QIVICONBUILDER: configure finished for %s", Arrays.asList(desc.getBuildSpec())));
 	}
 
 	@Override
 	public void deconfigure() throws CoreException {
-		System.out.println("QIVICONBUILDER: deconfigure called");
+		log("QIVICONBUILDER: deconfigure called");
 		// Remove the nature-specific information here
 		final IProjectDescription desc = project.getDescription();
 		final ICommand[] commands = desc.getBuildSpec();
@@ -72,8 +77,7 @@ public class QiviconBuilderNature implements IProjectNature {
 			desc.setBuildSpec(newCommands);
 			project.setDescription(desc, null);
 		}
-		System.out.println(
-				String.format("QIVICONBUILDER: deconfigure finished for %s", Arrays.asList(desc.getBuildSpec())));
+		log(String.format("QIVICONBUILDER: deconfigure finished for %s", Arrays.asList(desc.getBuildSpec())));
 	}
 
 	@Override
@@ -85,5 +89,17 @@ public class QiviconBuilderNature implements IProjectNature {
 	public void setProject(final IProject project) {
 		this.project = project;
 	}
+
+	private void log(final String message) {
+		if (!QiviconBuilder.DEBUG_OUTPUT) {
+			return;
+		}
+		if (this.consoleStream == null) {
+			this.consoleStream = QiviconBuilder.getStreamForLoggingToEclipseConsole();
+			this.consoleStream.setActivateOnWrite(true);
+		}
+		this.consoleStream.println(message);
+	}
+
 
 }

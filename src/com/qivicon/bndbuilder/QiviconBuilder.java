@@ -44,33 +44,26 @@ import aQute.bnd.build.Workspace;
 import aQute.bnd.service.RepositoryPlugin;
 
 /**
- * Builder for zipping compiled build artifacts of an arbitrary project 
+ * Qivicon bnd builder for zipping compiled build artifacts of an arbitrary Java project 
  * into an JAR bundle file and copy it to a well-defined bnd workspace repository location.
- * 
- * @see <a href=
- *      "http://help.eclipse.org/photon/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2FresAdv_builders.htm&cp=2_0_11_1">official
- *      Eclipse Photon documentation about incremental builders</a>
- * 
- *      <a href=
- *      "http://www.eclipse.org/articles/Article-Builders/builders.html">article
- *      about Eclipse project builders and natures</a>
  */
 public class QiviconBuilder extends IncrementalProjectBuilder {
 
 	static final boolean DEBUG_OUTPUT = true;
 	static final String BUILDER_ID = "com.qivicon.bndbuilder.qiviconbndbuilder";
 	static final String BUILDER_NAME = "QIVICON bnd builder";
-	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
-	static final String EXCLUDE_LOCATION = "META-INF/exclude.properties";
-	static final int INTERNAL_ERROR = -10001;
+
+	private static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
+	private static final String EXCLUDE_LOCATION = "META-INF/exclude.properties";
+	private static final int INTERNAL_ERROR = -10001;
 
 	/**
 	 * The well-defined name of the bnd workspace repository that the artifacts are
 	 * deployed to if the repo is present. "Local" is a repository created by
 	 * default, but may be missing if user decided to remove it
 	 */
-	static final String BND_WORKSPACE_REPO_NAME = "Local";
-	
+	private static final String BND_WORKSPACE_REPO_NAME = "Local";
+
 	private MessageConsoleStream consoleStream;
 	// Folders to exclude from export (case-sensitive)
 	private Collection<String> excludeFolders;
@@ -446,7 +439,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		this.consoleStream.println(message);
 	}
 
-	private MessageConsoleStream getStreamForLoggingToEclipseConsole() {
+	static MessageConsoleStream getStreamForLoggingToEclipseConsole() {
 		final MessageConsole console = new MessageConsole(BUILDER_NAME, null);
 		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
 		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
