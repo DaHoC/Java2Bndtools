@@ -150,7 +150,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		jarPackage.setElements(exportElements);
 		jarPackage.setExportClassFiles(true);
 		jarPackage.setExportOutputFolders(true);
-		jarPackage.setExportJavaFiles(false);
+		jarPackage.setExportJavaFiles(true);
 		jarPackage.setRefactoringAware(false);
 		jarPackage.setUseSourceFolderHierarchy(true);
 		jarPackage.setSaveDescription(false);
