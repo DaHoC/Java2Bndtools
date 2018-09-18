@@ -16,8 +16,6 @@ import org.eclipse.ui.console.MessageConsoleStream;
  */
 public class QiviconBuilderNature implements IProjectNature {
 
-	static final String NATURE_ID = "com.qivicon.bndbuilder.qiviconbndbuildernature";
-
 	private MessageConsoleStream consoleStream;
 	private IProject project;
 

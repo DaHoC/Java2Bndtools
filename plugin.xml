@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-	<extension id="qiviconbndbuilder" name="QIVICON bnd builder" point="org.eclipse.core.resources.builders">
-		<builder>
-			<run class="com.qivicon.bndbuilder.QiviconBuilder">
-			</run>
-		</builder>
-	</extension>
-	<extension id="qiviconbndbuildernature" name="QIVICON bnd builder Nature" point="org.eclipse.core.resources.natures">
+	<extension id="qiviconbndbuildernature" name="QIVICON bnd builder nature" point="org.eclipse.core.resources.natures">
 		<runtime>
-			<run class="com.qivicon.bndbuilder.QiviconBuilderNature">
-			</run>
+			<run class="com.qivicon.bndbuilder.QiviconBuilderNature"/>
 		</runtime>
 		<requires-nature id="org.eclipse.jdt.core.javanature"/>
+		<builder id="com.qivicon.bndbuilder.qiviconbndbuilder"/>
+	</extension>
+	<extension id="qiviconbndbuilder" name="QIVICON bnd builder" point="org.eclipse.core.resources.builders">
+		<builder hasNature="true">
+			<run class="com.qivicon.bndbuilder.QiviconBuilder"/>
+		</builder>
 	</extension>
 </plugin>

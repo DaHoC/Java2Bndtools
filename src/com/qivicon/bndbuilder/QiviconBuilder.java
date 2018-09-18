@@ -440,7 +440,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	}
 
 	static MessageConsoleStream getStreamForLoggingToEclipseConsole() {
-		final MessageConsole console = new MessageConsole(BUILDER_NAME, null);
+		final MessageConsole console = new MessageConsole(BUILDER_NAME + " console", null);
 		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
 		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
 		final MessageConsoleStream stream = console.newMessageStream();
