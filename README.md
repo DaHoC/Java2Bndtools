@@ -28,6 +28,17 @@ You need an Eclipse workspace containing
 * a bnd workspace repository called "Local"
 * a Java project (containing the org.eclipse.jdt.core.javanature nature and a META-INF/MANIFEST.MF file) in the same Eclipse workspace
 
+To associate the plug-in with a Java project, you need to add a nature (with a builder) to the project you want to provide in the local bnd workspace.
+To do so, there are two ways:
+
+### GUI way (recommended)
+Select the Java project, go into its properties (e.g. by right-clicking the project → *Properties*), select *Project Natures* → *Add...* → *QIVICON bnd builder nature* as depicted below:
+
+![Add project nature](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/AddProjectNature.jpg "Add project nature")
+
+After hitting *Apply and Close*, the project nature is added, the corresponding builder is added and registered and the project is build and should immediately appear in the bnd workspace "Local" repository.
+
+### Manual way
 For the Java project add the `com.qivicon.bndbuilder.qiviconbndbuildernature` and `buildCommand` `com.qivicon.bndbuilder.qiviconbndbuilder` as last build entry as shown in the following `.project` entries / builder:
 
 	<?xml version="1.0" encoding="UTF-8"?>
@@ -51,35 +62,34 @@ For the Java project add the `com.qivicon.bndbuilder.qiviconbndbuildernature` an
 		</natures>
 	</projectDescription>
 
-When triggering a *full build* on this Java project, e.g. by doing a *Project → Clean…*, the project should appear as bundle in the bnd workspace "Local" repository.
+Each time when a *full build* on the Java project is triggered, e.g. by doing a *Project → Clean…*, the updated project should appear as bundle in the bnd workspace "Local" repository.
 
 The name of the bundle corresponds to the `Bundle-SymbolicName` `MANIFEST.MF` entry, the version to `Bundle-Version`.
 
 This bundle can now be referenced by a bnd project.
 
 ### Example usage
-Consider a Java project in your workspace that has a `Bundle-SymbolicName` of `com.foo.bar` and a `Bundle-Version` of `2.1.0`.
+Consider a Java project in your workspace that has a `Bundle-SymbolicName` of `com.foo` and a `Bundle-Version` of `2.1.0`.
 
-Besides this project, the `de.foobar.ui` bnd project is present in our Eclipse workspace should require the `com.foo.bar` bundle as dependency.
+Besides this project, the `de.bar.ui` bnd project is present in our Eclipse workspace, which should require the `com.foo` bundle as dependency.
 
-Do a full build of the Java project `com.foo.bar`, the corresponding bundle should now be listed in the "Local" bnd workspace repository.
+Do a full build of the Java project `com.foo`, the corresponding bundle should now be listed in the "Local" bnd workspace repository.
 
 Now reference if from e.g. the `bnd.bnd` file, e.g.
 
-	-buildpath = com.foo.bar;version=2.1.0
+	-buildpath = com.foo;version=2.1.0
 
-Now the `de.foobar.ui` bnd project references the `com.foo.bar` bundle as dependency.
+Now the `de.bar.ui` bnd project references the `com.foo` bundle as dependency and the exposed API (including JavaDoc) can be used.
 
 ## How does it work?
-If the Java project is given the additional nature and builder as mentioned before, the builder registers itself as the last builder to execute in the chain, to make sure it's called after the Java builder and other builders doing e.g. source generation or resource handling.
+If the Java project is given the additional nature (and builder) as mentioned before, the builder registers itself as the last builder to execute in the chain, to make sure it's called after all other builders doing e.g. source generation or resource handling, especially after the Java builder.
 
-During a full project build, the Qivicon bnd builder packs generated Java artifacts of the project into a temporary jar file using the Eclipse-internal jar package exporter with predefined settings.
+During each *full* build of this Java project, the Qivicon bnd builder packs generated Java artifacts of the project into a temporary jar file using the Eclipse-internal jar package exporter with custom settings.
 
 This temporary JAR file is passed via stream to the bnd workspace "Local" repository where it should appear.
 It is automatically overwritten for each new full build and the bnd workspace repository is refreshed automatically.
 
 ## Open issues & to-do
-1. Fix that if the Qivicon bnd builder nature is added to the project, the project is configured with the builder accordingly
 1. Support incremental builds to some extent
 1. Integrate correct progress meter (currently unused)
 1. Develop strategy to mark projects that the plugin should consider, i.e. set the nature and builder by selection

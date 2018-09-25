@@ -1,5 +1,6 @@
 package com.qivicon.bndbuilder;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -38,6 +39,7 @@ public class QiviconBuilderNature implements IProjectNature {
 			project.setDescription(desc, null);
 		}
 		log(String.format("QIVICONBUILDER: configure finished, resulting project builders: %s", Arrays.asList(desc.getBuildSpec())));
+		cleanup();
 	}
 
 	@Override
@@ -52,6 +54,7 @@ public class QiviconBuilderNature implements IProjectNature {
 			project.setDescription(desc, null);
 		}
 		log(String.format("QIVICONBUILDER: deconfigure finished, resulting project builders: %s", Arrays.asList(desc.getBuildSpec())));
+		cleanup();
 	}
 
 	@Override
@@ -75,4 +78,14 @@ public class QiviconBuilderNature implements IProjectNature {
 		this.consoleStream.println(message);
 	}
 
+	private void cleanup() {
+		if (this.consoleStream != null) {
+			try {
+				this.consoleStream.close();
+			} catch (IOException e) {
+				// Hide exception
+			}
+			this.consoleStream = null;
+		}
+	}
 }

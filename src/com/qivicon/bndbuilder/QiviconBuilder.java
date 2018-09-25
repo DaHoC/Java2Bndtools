@@ -37,6 +37,7 @@ import org.eclipse.jdt.ui.jarpackager.IJarExportRunnable;
 import org.eclipse.jdt.ui.jarpackager.JarPackageData;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
@@ -44,8 +45,9 @@ import aQute.bnd.build.Workspace;
 import aQute.bnd.service.RepositoryPlugin;
 
 /**
- * Qivicon bnd builder for zipping compiled build artifacts of an arbitrary Java project 
- * into an JAR bundle file and copy it to a well-defined bnd workspace repository location.
+ * Qivicon bnd builder for zipping compiled build artifacts of an arbitrary Java
+ * project into an JAR bundle file and copy it to a well-defined bnd workspace
+ * repository location.
  */
 public class QiviconBuilder extends IncrementalProjectBuilder {
 
@@ -54,7 +56,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	static final String BUILDER_NAME = "QIVICON bnd builder";
 
 	private static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
-	private static final String EXCLUDE_LOCATION = "META-INF/exclude.properties";
+	private static final String EXCLUDE_LOCATION = "META-INF/plugin.properties";
 	private static final int INTERNAL_ERROR = -10001;
 
 	/**
@@ -62,7 +64,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	 * deployed to if the repo is present. "Local" is a repository created by
 	 * default, but may be missing if user decided to remove it
 	 */
-	private static final String BND_WORKSPACE_REPO_NAME = "Local";
+	private String bndWorkspaceRepositoryName = "Local";
 
 	private MessageConsoleStream consoleStream;
 	// Folders to exclude from export (case-sensitive)
@@ -92,7 +94,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		return new IProject[0];
 	}
 
-	protected void incrementalBuild(final IResourceDelta delta, final IProgressMonitor monitor) throws CoreException {
+	protected void incrementalBuild(final IResourceDelta delta, final IProgressMonitor monitor) {
 		// TODO Implement me
 		log(String.format("%s: Delta changes of %s (nothing done at the moment)", BUILDER_ID, delta.getFullPath().toString()));
 	}
@@ -100,7 +102,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	protected void fullBuild(final IProgressMonitor monitor) throws CoreException {
 		boolean builderOrderOK = checkBuilderOrdering();
 		if (!builderOrderOK) {
-			// TODO Automatically swap the builders when the order is wrong, i.e. fix this on-the-fly
+			// TODO Automatically swap the builders on wrong ordering, i.e. fix this on-the-fly
 			log(String.format("%s: Bad builder order for project %s!", BUILDER_ID, getProject().getName()));
 			return;
 		}
@@ -188,12 +190,14 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	}
 
 	/**
-	 * Filters over all project resources and excludes files and directories mentioned in {@link #EXCLUDE_FILES} and {@link #EXCLUDE_DIRECTORIES} respectively.
-	 * Iteration is internally split up by java resources and non-java resources.
-	 * According to Eclipse source, the returned elements must be (a mix) of type IJavaProject, IJavaElement, IResource, IFile, ..?
+	 * Filters over all project resources and excludes files and directories
+	 * mentioned in {@link #EXCLUDE_FILES} and {@link #EXCLUDE_DIRECTORIES}
+	 * respectively. Iteration is internally split up by java resources and non-java
+	 * resources. According to Eclipse source, the returned elements must be (a mix)
+	 * of type IJavaProject, IJavaElement, IResource, IFile, ..?
 	 * 
 	 * @return elements of type IJavaProject, IJavaElement, IResource, IFile,...
-	 * @throws JavaModelException thrown by the call to get java or non-java project resources
+	 * @throws JavaModelException by the call to get java or non-java project resources
 	 */
 	private Object[] retrieveSelectedElementsToExport() throws JavaModelException {
 		final Optional<IJavaProject> jprojectOpt = retrieveJavaProject();
@@ -209,7 +213,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		// Gather non-java specific resources
 		final Collection<Object> nonJavaResources = collectNonJavaResources(jprojectOpt.get());
 		selectedElements.addAll(nonJavaResources);
-		
+
 		return selectedElements.toArray();
 	}
 
@@ -225,7 +229,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 			log(errorMessage);
 			return Optional.empty();
 		}
-		
+
 		if (jproject == null || !jproject.exists()) {
 			final String errorMessage = String.format("%s project %s is not a Java project (anymore)!", BUILDER_ID, getProject().getName());
 			log(errorMessage);
@@ -255,14 +259,13 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		final Collection<Object> selectedElements = new LinkedHashSet<>(projectNonJavaChildren.length);
 		for (final Object nonJavaElement : projectNonJavaChildren) {
 			if (nonJavaElement instanceof IFile) {
-				final IFile nonJavaFile = (IFile)nonJavaElement;
+				final IFile nonJavaFile = (IFile) nonJavaElement;
 				log(String.format("Project non-java file %s encountered", nonJavaFile.getName()));
 				if (!excludeFiles.contains(nonJavaFile.getName())) {
 					selectedElements.add(nonJavaFile);
 				}
-			} else
-			if (nonJavaElement instanceof IFolder) {
-				final IFolder nonJavaFolder = (IFolder)nonJavaElement;
+			} else if (nonJavaElement instanceof IFolder) {
+				final IFolder nonJavaFolder = (IFolder) nonJavaElement;
 				log(String.format("Project non-java folder %s encountered", nonJavaFolder.getName()));
 				if (!excludeFolders.contains(nonJavaFolder.getName())) {
 					selectedElements.add(nonJavaFolder);
@@ -320,10 +323,10 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 				log(String.format("%s project %s: bnd workspace could not be retrieved!", BUILDER_ID, getProject().getName()));
 				return Optional.empty();
 			}
-			// Prerequisite: bnd workspace repository with well-defined name BND_WORKSPACE_REPO_NAME must be present
-			final RepositoryPlugin bndWorkspaceRepository = bndWorkspace.getRepository(BND_WORKSPACE_REPO_NAME);
+			// Prerequisite: bnd workspace repository with well-defined name must be present
+			final RepositoryPlugin bndWorkspaceRepository = bndWorkspace.getRepository(bndWorkspaceRepositoryName);
 			if (bndWorkspaceRepository == null) {
-				log(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), BND_WORKSPACE_REPO_NAME));
+				log(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName));
 				return Optional.empty();
 			}
 			return Optional.ofNullable(bndWorkspaceRepository);
@@ -352,7 +355,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	 * Checks whether this builder is configured to run <b>after</b> the Java
 	 * builder.
 	 * 
-	 * @return <code>true</code> if the builder order is correct, and <code>false</code> otherwise
+	 * @return <code>true</code> if the builder order is correct, <code>false</code> otherwise
 	 * @exception CoreException if something goes wrong
 	 */
 	private boolean checkBuilderOrdering() throws CoreException {
@@ -378,15 +381,19 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 
 		try (final InputStream input = getClass().getClassLoader().getResourceAsStream(EXCLUDE_LOCATION)) {
 			properties.load(input);
-			final String foldersProperty = properties.getProperty("folders");
-			final String filesProperty = properties.getProperty("files");
-			if (foldersProperty == null || filesProperty == null) {
+			final String excludeFoldersProperty = properties.getProperty("exclude_folders");
+			final String excludeFilesProperty = properties.getProperty("exclude_files");
+			final String bndWorkspaceRepositoryProperty = properties.getProperty("bnd_workspace_repository");
+			if (excludeFoldersProperty == null || excludeFilesProperty == null
+					|| bndWorkspaceRepositoryProperty == null) {
 				// Wrap into CoreException
 				final String message = String.format("Could not read properties file %s values!", EXCLUDE_LOCATION);
 				throw createCoreException(message, null);
 			}
-			final String[] excludeFoldersArr = foldersProperty.split(",");
-			final String[] excludeFilesArr = filesProperty.split(",");
+			this.bndWorkspaceRepositoryName = bndWorkspaceRepositoryProperty.trim();
+			log(String.format("Bnd workspace repository to use=%s", this.bndWorkspaceRepositoryName));
+			final String[] excludeFoldersArr = excludeFoldersProperty.split(",");
+			final String[] excludeFilesArr = excludeFilesProperty.split(",");
 			log("Exclude folders=" + Arrays.toString(excludeFoldersArr));
 			log("Exclude files=" + Arrays.toString(excludeFilesArr));
 			this.excludeFolders = Arrays.asList(excludeFoldersArr);
@@ -397,16 +404,17 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 			throw createCoreException(message, e);
 		}
 	}
+
 	/**
 	 * Creates a <code>CoreException</code> with the given parameters.
 	 *
-	 * @param	message		a string with the message
-	 * @param	exception	the exception to be wrapped, or <code>null</code> if none
+	 * @param message   a string with the message
+	 * @param exception the exception to be wrapped, or <code>null</code> if none
 	 * @return a CoreException
 	 */
 	private static CoreException createCoreException(String message, final Exception exception) {
 		if (message == null) {
-			message= ""; //$NON-NLS-1$
+			message = ""; //$NON-NLS-1$
 		}
 		return new CoreException(new Status(IStatus.ERROR, BUILDER_ID, INTERNAL_ERROR, message, exception));
 	}
@@ -440,7 +448,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	}
 
 	static MessageConsoleStream getStreamForLoggingToEclipseConsole(final String consoleName) {
-		final MessageConsole console = new MessageConsole(consoleName, null);
+		final MessageConsole console = findOrCreateConsole(consoleName);
 		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
 		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
 		final MessageConsoleStream stream = console.newMessageStream();
@@ -448,5 +456,20 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 		System.setErr(new PrintStream(stream));
 		System.setOut(new PrintStream(stream));
 		return stream;
+	}
+
+	private static MessageConsole findOrCreateConsole(final String name) {
+		final ConsolePlugin plugin = ConsolePlugin.getDefault();
+		final IConsoleManager conMan = plugin.getConsoleManager();
+		final IConsole[] existing = conMan.getConsoles();
+		for (int i = 0; i < existing.length; i++) {
+			if (name.equals(existing[i].getName())) {
+				return (MessageConsole) existing[i];
+			}
+		}
+		// no console found, so create a new one
+		final MessageConsole myConsole = new MessageConsole(name, null);
+		conMan.addConsoles(new IConsole[] { myConsole });
+		return myConsole;
 	}
 }
