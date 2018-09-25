@@ -100,7 +100,7 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 	protected void fullBuild(final IProgressMonitor monitor) throws CoreException {
 		boolean builderOrderOK = checkBuilderOrdering();
 		if (!builderOrderOK) {
-			// TODO We can automatically swap the builders when the order is wrong, i.e. fix this on-the-fly
+			// TODO Automatically swap the builders when the order is wrong, i.e. fix this on-the-fly
 			log(String.format("%s: Bad builder order for project %s!", BUILDER_ID, getProject().getName()));
 			return;
 		}
@@ -433,14 +433,14 @@ public class QiviconBuilder extends IncrementalProjectBuilder {
 			return;
 		}
 		if (this.consoleStream == null) {
-			this.consoleStream = getStreamForLoggingToEclipseConsole();
+			this.consoleStream = getStreamForLoggingToEclipseConsole(BUILDER_NAME + " console");
 			this.consoleStream.setActivateOnWrite(true);
 		}
 		this.consoleStream.println(message);
 	}
 
-	static MessageConsoleStream getStreamForLoggingToEclipseConsole() {
-		final MessageConsole console = new MessageConsole(BUILDER_NAME + " console", null);
+	static MessageConsoleStream getStreamForLoggingToEclipseConsole(final String consoleName) {
+		final MessageConsole console = new MessageConsole(consoleName, null);
 		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
 		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
 		final MessageConsoleStream stream = console.newMessageStream();
