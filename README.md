@@ -94,4 +94,4 @@ It is automatically overwritten for each new full build and the bnd workspace re
 1. Integrate correct progress meter (currently unused)
 1. Develop strategy to mark projects that the plugin should consider, i.e. set the nature and builder by selection
 1. Provide a good way to ship this plugin to team developers
-1. Check if there is nothing preventing this project to become open-source
+1. Check if there is nothing preventing this project to become open-source, settle for software license
