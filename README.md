@@ -91,6 +91,7 @@ It is automatically overwritten for each new full build and the bnd workspace re
 
 ## Open issues & to-do
 1. Support incremental builds to some extent
+1. Restrict builder/nature to non-bnd projects
 1. Integrate correct progress meter (currently unused)
 1. Develop strategy to mark projects that the plugin should consider, i.e. set the nature and builder by selection
 1. Provide a good way to ship this plugin to team developers
