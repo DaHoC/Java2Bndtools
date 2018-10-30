@@ -14,4 +14,39 @@
 			<run class="com.qivicon.bndbuilder.QiviconBuilder"/>
 		</builder>
 	</extension>
+	
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution locationURI="popup:org.eclipse.ui.popup.any">
+			<command 
+				commandId="com.qivicon.bndbuilder.AddNatureCommand"
+				label="Add QiviconBndBuilder nature"
+				style="push">
+				<visibleWhen checkEnabled="true" />
+			</command>
+			<command
+				commandId="com.qivicon.bndbuilder.RemoveNatureCommand"
+				label="Remove QiviconBndBuilder nature"
+				style="push">
+				<visibleWhen checkEnabled="true" />
+			</command>
+		</menuContribution>
+	</extension>
+	<extension point="org.eclipse.ui.handlers">
+		<handler
+			commandId="com.qivicon.bndbuilder.AddNatureCommand"
+			class="com.qivicon.bndbuilder.AddNatureCommand"/>
+		<handler
+			commandId="com.qivicon.bndbuilder.RemoveNatureCommand"
+			class="com.qivicon.bndbuilder.RemoveNatureCommand"/>
+	</extension>
+	<extension point="org.eclipse.ui.commands">
+		<command
+			id="com.qivicon.bndbuilder.AddNatureCommand"
+			name="Add QiviconBuilder nature"
+			description=""/>
+		<command
+			id="com.qivicon.bndbuilder.RemoveNatureCommand"
+			name="Remove QiviconBuilder nature"
+			description="Remove QiviconBuilder nature"/>
+	</extension>
 </plugin>

@@ -1,44 +1,54 @@
 # Qivicon bnd builder
 
 ## What is it and what does it do?
-Eclipse PDE builder plug-in to provide arbitrary build artifacts as bundles to a bnd workspace repository, comprising of
+Eclipse PDE builder plugin to provide arbitrary build artifacts as bundles to a bnd workspace repository, comprising of
 1. Incremental Builder
 1. Project nature
 
-![Example Eclipse flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/ExampleFlow.jpg "Example Eclipse flow")
+![Example Eclipse flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/ExampleFlow.jpg "Example Eclipse flow")
 
 ## Prerequisites
-1. Eclipse workspace with bndtools workspace with bnd repository named "Local"
-1. Same Eclipse workspace containing a Java project
-1. The `META-INF/MANIFEST.MF` of the Java project must be present, readable and must have the following attributes (`Bundle-Version` defaults to `0.0.0` if not specified), mind the mandatory newline at the end:
+1. Eclipse workspace with bndtools workspace with the mandatory bnd cnf project folder and a bnd repository named "Local"
+1. A Java project (having the org.eclipse.jdt.core.javanature nature) being contained within the same Eclipse workspace
+1. The `META-INF/MANIFEST.MF` of the Java project must be present, readable and must have the following attributes (`Bundle-Version` defaults to `0.0.0` if not specified), mind the mandatory newline at the end of the file:
 
-	Manifest-Version: 1.0
-	Bundle-Name: Dummy project
-	Bundle-SymbolicName: com.foo.bar
-	Bundle-ManifestVersion: 2
-	Bundle-Version: 2.0.0
+```
+Manifest-Version: 1.0
+Bundle-Name: Dummy project
+Bundle-SymbolicName: com.foo.bar
+Bundle-ManifestVersion: 2
+Bundle-Version: 2.0.0
+```
 
 ## How to install?
 TODO
 
 ## How to use?
-You need an Eclipse workspace containing
+Make sure that the prerequisites are met.
 
-* a bnd workspace with the mandatory bnd cnf project folder
-* a bnd workspace repository called "Local"
-* a Java project (containing the org.eclipse.jdt.core.javanature nature and a META-INF/MANIFEST.MF file) in the same Eclipse workspace
+To associate the plugin with a Java project, you need to add a nature (with a builder) to the project you want to provide in the local bnd workspace.
 
-To associate the plug-in with a Java project, you need to add a nature (with a builder) to the project you want to provide in the local bnd workspace.
-To do so, there are two ways:
+Then each time when a *full build* on the Java project is triggered, e.g. by doing a *Project → Clean…*, the updated project should appear as bundle in the bnd workspace "Local" repository.
 
-### GUI way (recommended)
+The name of the bundle corresponds to the `Bundle-SymbolicName` `MANIFEST.MF` entry, the version to `Bundle-Version`.
+
+This bundle can then be referenced by a bnd project.
+
+To associate the plugin with a Java project, there are several approaches:
+
+### Plugin way (recommended)
+Select the Java projects which should be considered and included as bnd dependencies in the "Package Explorer" or "Project Explorer" view, right-click to open the context menu → *Add QiviconBndBuilder nature*
+
+![Add project nature via plugin](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/AddProjectNatureViaPlugin.jpg "Add project nature via plugin")
+
+#### Alternative way 1: Using Eclipse project properties
 Select the Java project, go into its properties (e.g. by right-clicking the project → *Properties*), select *Project Natures* → *Add...* → *QIVICON bnd builder nature* as depicted below:
 
-![Add project nature](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/AddProjectNature.jpg "Add project nature")
+![Add project nature](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/AddProjectNature.jpg "Add project nature")
 
 After hitting *Apply and Close*, the project nature is added, the corresponding builder is added and registered and the project is build and should immediately appear in the bnd workspace "Local" repository.
 
-### Manual way
+#### Alternative way 2: Manual way (not recommended)
 For the Java project add the `com.qivicon.bndbuilder.qiviconbndbuildernature` and `buildCommand` `com.qivicon.bndbuilder.qiviconbndbuilder` as last build entry as shown in the following `.project` entries / builder:
 
 	<?xml version="1.0" encoding="UTF-8"?>
@@ -62,12 +72,6 @@ For the Java project add the `com.qivicon.bndbuilder.qiviconbndbuildernature` an
 		</natures>
 	</projectDescription>
 
-Each time when a *full build* on the Java project is triggered, e.g. by doing a *Project → Clean…*, the updated project should appear as bundle in the bnd workspace "Local" repository.
-
-The name of the bundle corresponds to the `Bundle-SymbolicName` `MANIFEST.MF` entry, the version to `Bundle-Version`.
-
-This bundle can now be referenced by a bnd project.
-
 ### Example usage
 Consider a Java project in your workspace that has a `Bundle-SymbolicName` of `com.foo` and a `Bundle-Version` of `2.1.0`.
 
@@ -89,10 +93,22 @@ During each *full* build of this Java project, the Qivicon bnd builder packs gen
 This temporary JAR file is passed via stream to the bnd workspace "Local" repository where it should appear.
 It is automatically overwritten for each new full build and the bnd workspace repository is refreshed automatically.
 
+## Changelog
+
+* 1.5.0 Added context menu to batch-add and -remove the Qivicon bnd builder nature, major refactoring
+* 1.4.0 Include package sources to provide Javadoc
+* 1.3.0 Added nature to add and remove corresponding builder, renaming, cleanups
+* 1.2.0 Added possibility to exlude project files and folders from export
+* 1.1.0 Use Eclipse-internal JAR archiver
+* 1.0.0 Incremental version
+
+## License
+TODO
+
 ## Open issues & to-do
 1. Support incremental builds to some extent
-1. Restrict builder/nature to non-bnd projects
 1. Integrate correct progress meter (currently unused)
-1. Develop strategy to mark projects that the plugin should consider, i.e. set the nature and builder by selection
+1. Show context menu to add/remove the QiviconBndBuilder nature only for matching projects
 1. Provide a good way to ship this plugin to team developers
+1. Add installation instructions and add feature and updatesite projects to SCM
 1. Check if there is nothing preventing this project to become open-source, settle for software license
