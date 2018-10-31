@@ -189,7 +189,7 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 
 		final Collection<Object> selectedElements = new LinkedHashSet<>();
 		// Gather java-specific resources
-		final Collection<Object> javaResources = collectJavaResources(jprojectOpt.get());
+		final Collection<IJavaElement> javaResources = collectJavaResources(jprojectOpt.get());
 		selectedElements.addAll(javaResources);
 
 		// Gather non-java specific resources
@@ -220,12 +220,12 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 		return Optional.ofNullable(jproject);
 	}
 
-	private Collection<Object> collectJavaResources(final IJavaProject jproject) throws JavaModelException {
+	private Collection<IJavaElement> collectJavaResources(final IJavaProject jproject) throws JavaModelException {
 		final IJavaElement[] projectChildren = jproject.getChildren();
 		if (projectChildren == null) {
 			return Collections.emptySet();
 		}
-		final Collection<Object> selectedElements = new LinkedHashSet<>(projectChildren.length);
+		final Collection<IJavaElement> selectedElements = new LinkedHashSet<>(projectChildren.length);
 		for (final IJavaElement javaElement : projectChildren) {
 			log(String.format("Project java element %s encountered", javaElement.getElementName()));
 			selectedElements.add(javaElement);

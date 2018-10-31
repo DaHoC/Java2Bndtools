@@ -95,7 +95,7 @@ It is automatically overwritten for each new full build and the bnd workspace re
 
 ## Changelog
 
-* 1.5.0 Added context menu to batch-add and -remove the Qivicon bnd builder nature, major refactoring
+* 1.5.0 Added context menu to batch-add and -remove the Qivicon bnd builder nature, major refactoring, set license EPL-2.0
 * 1.4.0 Include package sources to provide Javadoc
 * 1.3.0 Added nature to add and remove corresponding builder, renaming, cleanups
 * 1.2.0 Added possibility to exlude project files and folders from export
@@ -103,12 +103,12 @@ It is automatically overwritten for each new full build and the bnd workspace re
 * 1.0.0 Incremental version
 
 ## License
-TODO
+See LICENSE file
 
 ## Open issues & to-do
-1. Support incremental builds to some extent
+1. Support incremental builds to some extent if possible
 1. Integrate correct progress meter (currently unused)
 1. Show context menu to add/remove the QiviconBndBuilder nature only for matching projects
 1. Provide a good way to ship this plugin to team developers
 1. Add installation instructions and add feature and updatesite projects to SCM
-1. Check if there is nothing preventing this project to become open-source, settle for software license
+1. Check if there is nothing preventing this project to become open-source

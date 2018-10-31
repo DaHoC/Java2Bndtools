@@ -68,8 +68,8 @@ abstract class QiviconBuilderUtils {
 		}
 	};
 
-	QiviconBuilderUtils() {
-		throw new UnsupportedOperationException("Cannot instantiate QiviconBuilderUtils class");
+	private QiviconBuilderUtils() {
+		throw new IllegalAccessError("Cannot instantiate QiviconBuilderUtils class");
 	}
 
 	/**
