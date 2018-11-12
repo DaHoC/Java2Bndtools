@@ -19,6 +19,15 @@ Bundle-SymbolicName: com.foo.bar
 Bundle-ManifestVersion: 2
 Bundle-Version: 2.0.0
 ```
+If your bnd repositories are missing the `Local` repository, you can add the entry to the main `cnf/build.bnd` file:
+
+```
+-plugin.7.Local: \
+    aQute.bnd.deployer.repository.LocalIndexedRepo; \
+    name = Local; \
+    pretty = true; \
+    local = ${build}/local
+```
 
 ## How to install?
 TODO
@@ -106,6 +115,8 @@ It is automatically overwritten for each new full build and the bnd workspace re
 See LICENSE file
 
 ## Open issues & to-do
+1. Decide and implement what to do/fallback to if no "Local" repository is present
+1. If the project to add/remove a nature to/from is not a general project neither a JavaProject (weird Eclipse type hierarchy) deal with it, best-try effort style
 1. Support incremental builds to some extent if possible
 1. Integrate correct progress meter (currently unused)
 1. Show context menu to add/remove the QiviconBndBuilder nature only for matching projects

@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.console.ConsolePlugin;
@@ -81,9 +82,32 @@ abstract class QiviconBuilderUtils {
 	 */
 	static final boolean isJavaProjectAndNotBndProject(final IProject project) {
 		requireNonNull(project, PROJECT_NULL_ERROR);
+		return (isJavaProject(project) && !isBndProject(project));
+	}
+
+	private static boolean isJavaProject(final IProject project) {
+		return isMatchingProject(project, JavaCore.NATURE_ID, JavaCore.BUILDER_ID);
+	}
+
+	private static boolean isBndProject(final IProject project) {
+		return isMatchingProject(project, BND_NATURE_ID, BND_BUILDER_ID);
+	}
+
+	/**
+	 * Check if the given project has the QiviconBndBuilder project nature and corresponding builder assigned.
+	 * 
+	 * @param project project to check
+	 * @return {@code true} if the project has the QiviconBndBuilder project nature and corresponding builder assigned to it, {@code false} otherwise
+	 */
+	static final boolean isQiviconBndBuilderProject(final IProject project) {
+		return isMatchingProject(project, QiviconBuilderNature.NATURE_ID, QiviconBuilder.BUILDER_ID); 
+	}
+
+	private static boolean isMatchingProject(final IProject project, final String natureId, final String builderId) {
+		requireNonNull(project, PROJECT_NULL_ERROR);
 		try {
-			final boolean javaProjectAndNotBndProject = project.hasNature(JavaCore.NATURE_ID) && !project.hasNature(BND_NATURE_ID);
-			if (!javaProjectAndNotBndProject) {
+			final boolean givenProjectNaturePresent = project.hasNature(natureId);
+			if (!givenProjectNaturePresent) {
 				return false;
 			}
 			/* 
@@ -98,45 +122,7 @@ abstract class QiviconBuilderUtils {
 			if (commands == null) {
 				return false;
 			}
-			final boolean isJavaBuilderPresent = Stream.of(commands).map(ICommand::getBuilderName).filter(Objects::nonNull).anyMatch(JavaCore.BUILDER_ID::equals);
-			if (!isJavaBuilderPresent) {
-				return false;
-			}
-			// Check for MANIFEST.MF as precondition, otherwise the builder will not work on this project
-			final Optional<IPath> manifestLocationOpt = getManifestLocation(project);
-			if (!manifestLocationOpt.isPresent()) {
-				return false;
-			}
-			return Stream.of(commands).map(ICommand::getBuilderName).filter(Objects::nonNull).noneMatch(BND_BUILDER_ID::equals);
-		} catch (CoreException e) {
-			// Ignore and hide this exception, consider as non-matching project
-		}
-		return false;
-	}
-
-	/**
-	 * Check if the given project has the QiviconBndBuilder project nature and corresponding builder assigned.
-	 * 
-	 * @param project project to check
-	 * @return {@code true} if the project has the QiviconBndBuilder project nature and corresponding builder assigned to it, {@code false} otherwise
-	 */
-	static final boolean isQiviconBndBuilderProject(final IProject project) {
-		requireNonNull(project, PROJECT_NULL_ERROR);
-		try {
-			final boolean qiviconBndBuilderNaturePresent = project.hasNature(QiviconBuilderNature.NATURE_ID);
-			if (!qiviconBndBuilderNaturePresent) {
-				return false;
-			}
-			// Also check for corresponding builder
-			final IProjectDescription desc = project.getDescription();
-			if (desc == null) {
-				return false;
-			}
-			final ICommand[] commands = desc.getBuildSpec();
-			if (commands == null) {
-				return false;
-			}
-			return Stream.of(commands).map(ICommand::getBuilderName).filter(Objects::nonNull).anyMatch(QiviconBuilder.BUILDER_ID::equals);
+			return Stream.of(commands).map(ICommand::getBuilderName).filter(Objects::nonNull).anyMatch(builderId::equals);
 		} catch (CoreException e) {
 			// Ignore and hide this exception, consider as non-matching project
 		}
@@ -271,7 +257,7 @@ abstract class QiviconBuilderUtils {
 	}
 
 	/**
-	 * Extract projects out of selected objects (filter for type {@link IProject}).
+	 * Extract projects out of selected objects (filter for type {@link IProject} and {@link IJavaProject}).
 	 * 
 	 * @param selection selection containing arbitrary types
 	 * @return subset of selection containing only projects as unmodifiable collection
@@ -281,10 +267,19 @@ abstract class QiviconBuilderUtils {
 		final Iterator<?> iterator = selection.iterator();
 		while (iterator.hasNext()) {
 			final Object element = iterator.next();
+			// IJavaProject does not extend IProject ffs
+			if (element instanceof IJavaProject) {
+				final IJavaProject javaProject = (IJavaProject)element;
+				selectedProjects.add(javaProject.getProject());
+			} else
+			// The project class hierarchy in Eclipse is really this messed-up 
 			if (element instanceof IProject) {
 				final IProject project = (IProject)element;
 				selectedProjects.add(project);
 			}
+			/* Otherwise we don't know how to get the project,
+			 * maybe there are some more custom ICustomProjects out there that copied this bad practice
+			 */
 		}
 		return Collections.unmodifiableCollection(selectedProjects);
 	}
