@@ -15,7 +15,7 @@ public final class RemoveNatureCommand extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent executionEvent) throws ExecutionException {
 		final IStructuredSelection selection = HandlerUtil.getCurrentStructuredSelection(executionEvent);
-		final Collection<IProject> selectedProjects = QiviconBuilderUtils.extractSelectedProjects(selection);
+		final Collection<IProject> selectedProjects = QiviconBuilderUtils.extractSelectedJavaProjects(selection);
 		selectedProjects.stream().filter(Objects::nonNull)
 				.filter(QiviconBuilderUtils::isJavaProjectAndNotBndProject)
 				.filter(QiviconBuilderUtils::isQiviconBndBuilderProject)

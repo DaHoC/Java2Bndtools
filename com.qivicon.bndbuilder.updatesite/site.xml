@@ -3,7 +3,7 @@
    <description name="Qivicon bnd builder update site" url="https://qivicon-wbench.wesp.telekom.net/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/com.qivicon.bndbuilder.updatesite/">
       Qivicon bnd builder update site
    </description>
-   <feature url="features/com.qivicon.bndbuilder.feature_1.5.1.201811121132.jar" id="com.qivicon.bndbuilder.feature" version="1.5.1.201811121132">
+   <feature url="features/com.qivicon.bndbuilder.feature_1.5.2.201811140920.jar" id="com.qivicon.bndbuilder.feature" version="1.5.2.201811140920">
       <category name="com.qivicon.bndbuilder.category"/>
    </feature>
    <category-def name="com.qivicon.bndbuilder.category" label="Qivicon bnd builder">

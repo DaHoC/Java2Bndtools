@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -88,24 +89,40 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 	}
 
 	protected void fullBuild(final IProgressMonitor monitor) throws CoreException {
-		QiviconBuilderUtils.checkBuilderOrdering(getProject());
+		// We have 4 sub-tasks to be done
+		final SubMonitor subMonitor = SubMonitor.convert(monitor, 4);
+		subMonitor.setTaskName("Checking builder order");
+		subMonitor.subTask("Checking builder order");
+		QiviconBuilderUtils.checkBuilderOrdering(getProject(), subMonitor.split(1));
+
+		subMonitor.setTaskName("Reading settings");
+		subMonitor.subTask("Reading settings");
+		readFilesAndFoldersToExclude();
+		subMonitor.split(1);
+
 		log(String.format("%s: Exporting project %s", BUILDER_ID, getProject().getName()));
+		subMonitor.setTaskName("Creating temporary jar file");
+		subMonitor.subTask("Creating temporary jar file");
 
 		// Create a temporary jar package exported from the project
-		final Optional<File> exportedProjectJarFileOpt = getExportedProjectJarFile(monitor);
+		final Optional<File> exportedProjectJarFileOpt = exportProjectIntoJarFile(subMonitor.split(1));
 		if (!exportedProjectJarFileOpt.isPresent()) {
 			// Skipping this project
+			subMonitor.done();
 			return;
 		}
 
+		subMonitor.setTaskName("Add project to bnd repository");
+		subMonitor.subTask("Add project to bnd repository");
 		// Provide this jar file to the bnd repository
 		copyJarFileIntoBndWorkspaceRepository(exportedProjectJarFileOpt.get());
+		subMonitor.done();
 
 		// Delete the temporary jar file again upon exit
 		exportedProjectJarFileOpt.get().deleteOnExit();
 	}
 
-	private Optional<File> getExportedProjectJarFile(final IProgressMonitor monitor) throws CoreException {
+	private Optional<File> exportProjectIntoJarFile(final IProgressMonitor monitor) throws CoreException {
 		// Skip this project and display / log a hint that the builder could not proceed
 		final Optional<IPath> manifestLocationOpt = QiviconBuilderUtils.getManifestLocation(getProject());
 		if (!manifestLocationOpt.isPresent()) {
@@ -113,8 +130,6 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			log(errorMessage);
 			return Optional.empty();
 		}
-
-		readFilesAndFoldersToExclude();
 
 		final Object[] exportElements = retrieveSelectedElementsToExport();
 		if (exportElements == null || exportElements.length == 0) {

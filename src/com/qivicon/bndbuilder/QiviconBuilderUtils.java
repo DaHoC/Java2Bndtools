@@ -22,6 +22,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IJavaProject;
@@ -56,14 +57,14 @@ abstract class QiviconBuilderUtils {
 
 	static final Consumer<IProject> ADD_QIVICONBNDBUILDER_NATURE = project -> {
 		try {
-			addQiviconBndBuilderNature(project);
+			addQiviconBndBuilderNature(project, null);
 		} catch (CoreException e) {
 			// Ignore and skip this project and hide error, there's not much we can do here
 		}
 	};
 	static final Consumer<IProject> REMOVE_QIVICONBNDBUILDER_NATURE = project -> {
 		try {
-			removeQiviconBndBuilderNature(project);
+			removeQiviconBndBuilderNature(project, null);
 		} catch (CoreException e) {
 			// Ignore and skip this project and hide error, there's not much we can do here
 		}
@@ -137,7 +138,7 @@ abstract class QiviconBuilderUtils {
 	 * @return {@code true} if the builder order is correct, {@code false} otherwise
 	 * @exception CoreException if something goes wrong
 	 */
-	static final void checkBuilderOrdering(final IProject project) throws CoreException {
+	static final void checkBuilderOrdering(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -170,10 +171,10 @@ abstract class QiviconBuilderUtils {
 			commands[javaBuilderIndex] = qiviconBuilder;
 		}
 		description.setBuildSpec(commands);
-		project.setDescription(description, null);
+		project.setDescription(description, monitor);
 	}
 
-	static final void addQiviconBndBuilder(final IProject project) throws CoreException {
+	static final void addQiviconBndBuilder(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -187,10 +188,10 @@ abstract class QiviconBuilderUtils {
 		System.arraycopy(commands, 0, newCommands, 0, commands.length);
 		newCommands[newCommands.length - 1] = command;
 		description.setBuildSpec(newCommands);
-		project.setDescription(description, null);
+		project.setDescription(description, monitor);
 	}
 
-	static final void addQiviconBndBuilderNature(final IProject project) throws CoreException {
+	static final void addQiviconBndBuilderNature(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -207,10 +208,10 @@ abstract class QiviconBuilderUtils {
 			throw new CoreException(status);
 		}
 		description.setNatureIds(newNatures);
-		project.setDescription(description, null);
+		project.setDescription(description, monitor);
 	}
 
-	static final void removeQiviconBndBuilder(final IProject project) throws CoreException {
+	static final void removeQiviconBndBuilder(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -219,11 +220,11 @@ abstract class QiviconBuilderUtils {
 		final ICommand[] newCommands = Stream.of(commands).filter(Objects::nonNull).filter(com -> !(QiviconBuilder.BUILDER_ID.equals(com.getBuilderName()))).toArray(ICommand[]::new);
 		if (commands.length > newCommands.length) {
 			description.setBuildSpec(newCommands);
-			project.setDescription(description, null);
+			project.setDescription(description, monitor);
 		}
 	}
 
-	static final void removeQiviconBndBuilderNature(final IProject project) throws CoreException {
+	static final void removeQiviconBndBuilderNature(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -238,7 +239,7 @@ abstract class QiviconBuilderUtils {
 			throw new CoreException(status);
 		}
 		description.setNatureIds(newNatures);
-		project.setDescription(description, null);
+		project.setDescription(description, monitor);
 	}
 
 	/**
@@ -257,12 +258,12 @@ abstract class QiviconBuilderUtils {
 	}
 
 	/**
-	 * Extract projects out of selected objects (filter for type {@link IProject} and {@link IJavaProject}).
+	 * Extract Java projects out of selected objects (filter for type {@link IJavaProject}).
 	 * 
-	 * @param selection selection containing arbitrary types
-	 * @return subset of selection containing only projects as unmodifiable collection
+	 * @param selection containing arbitrary types
+	 * @return subset of selection containing only Java projects as unmodifiable collection
 	 */
-	static final Collection<IProject> extractSelectedProjects(final IStructuredSelection selection) {
+	static final Collection<IProject> extractSelectedJavaProjects(final IStructuredSelection selection) {
 		final Collection<IProject> selectedProjects = new HashSet<>();
 		final Iterator<?> iterator = selection.iterator();
 		while (iterator.hasNext()) {
@@ -271,14 +272,10 @@ abstract class QiviconBuilderUtils {
 			if (element instanceof IJavaProject) {
 				final IJavaProject javaProject = (IJavaProject)element;
 				selectedProjects.add(javaProject.getProject());
-			} else
-			// The project class hierarchy in Eclipse is really this messed-up 
-			if (element instanceof IProject) {
-				final IProject project = (IProject)element;
-				selectedProjects.add(project);
 			}
 			/* Otherwise we don't know how to get the project,
-			 * maybe there are some more custom ICustomProjects out there that copied this bad practice
+			 * maybe there are some more IProjects / custom ICustomProjects out there
+			 * that copied the broken missing IProject inheritance practice
 			 */
 		}
 		return Collections.unmodifiableCollection(selectedProjects);

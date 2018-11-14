@@ -14,20 +14,34 @@
 			<run class="com.qivicon.bndbuilder.QiviconBuilder"/>
 		</builder>
 	</extension>
-	
+
 	<extension point="org.eclipse.ui.menus">
 		<menuContribution locationURI="popup:org.eclipse.ui.popup.any">
 			<command 
 				commandId="com.qivicon.bndbuilder.AddNatureCommand"
 				label="Add QiviconBndBuilder nature"
 				style="push">
-				<visibleWhen checkEnabled="true" />
+				<visibleWhen checkEnabled="false">
+					<with variable="activeMenuSelection">
+						<iterate ifEmpty="false">
+							<!-- Enable only on Java Projects -->
+							<instanceof value="org.eclipse.jdt.core.IJavaProject" />
+						</iterate>
+					</with>
+				</visibleWhen>
 			</command>
 			<command
 				commandId="com.qivicon.bndbuilder.RemoveNatureCommand"
 				label="Remove QiviconBndBuilder nature"
 				style="push">
-				<visibleWhen checkEnabled="true" />
+				<visibleWhen checkEnabled="false">
+					<with variable="activeMenuSelection">
+						<iterate ifEmpty="false">
+							<!-- Enable only on Java Projects -->
+							<instanceof value="org.eclipse.jdt.core.IJavaProject" />
+						</iterate>
+					</with>
+				</visibleWhen>
 			</command>
 		</menuContribution>
 	</extension>

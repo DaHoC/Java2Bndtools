@@ -28,7 +28,7 @@ public final class QiviconBuilderNature implements IProjectNature {
 			log("QIVICONBUILDER: configure finished, project already was setup correctly or was not a Java project or had a bnd nature assigned to it");
 			return;
 		}
-		QiviconBuilderUtils.addQiviconBndBuilder(project);
+		QiviconBuilderUtils.addQiviconBndBuilder(project, null);
 		log(String.format("QIVICONBUILDER: configure finished, resulting new project builders: %s", Arrays.asList(project.getDescription().getBuildSpec())));
 		cleanup();
 	}
@@ -41,7 +41,7 @@ public final class QiviconBuilderNature implements IProjectNature {
 			log("QIVICONBUILDER: deconfigure finished, project already was setup correctly or was not a Java project or had a bnd nature assigned to it");
 			return;
 		}
-		QiviconBuilderUtils.removeQiviconBndBuilder(project);
+		QiviconBuilderUtils.removeQiviconBndBuilder(project, null);
 		log(String.format("QIVICONBUILDER: deconfigure finished, resulting project builders: %s", Arrays.asList(project.getDescription().getBuildSpec())));
 		cleanup();
 	}
