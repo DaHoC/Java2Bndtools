@@ -157,7 +157,8 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 		jarPackage.setCompress(true);
 		jarPackage.setIncludeDirectoryEntries(true);
 		jarPackage.setOverwrite(true);
-		jarPackage.setBuildIfNeeded(true);
+		// Should be already built be the previous builders in the chain
+		jarPackage.setBuildIfNeeded(false);
 
 		File tmpFile = null;
 		try {
@@ -242,7 +243,7 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 		}
 		final Collection<IJavaElement> selectedElements = new LinkedHashSet<>(projectChildren.length);
 		for (final IJavaElement javaElement : projectChildren) {
-			log(String.format("Project java element %s encountered", javaElement.getElementName()));
+			log(String.format("Project java element %s encountered", javaElement.getPath()));
 			selectedElements.add(javaElement);
 		}
 		return selectedElements;
@@ -309,13 +310,11 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			// Prerequisite: bnd workspace repository with well-defined name must be present
 			final RepositoryPlugin bndWorkspaceRepository = bndWorkspace.getRepository(bndWorkspaceRepositoryName);
 			if (bndWorkspaceRepository == null) {
-				log(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName));
-				return Optional.empty();
+				throw QiviconBuilderUtils.createCoreException(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName), null);
 			}
 			return Optional.ofNullable(bndWorkspaceRepository);
 		} catch (Exception e) {
-			log(String.format("%s project %s: could not obtain bnd workspace repository!", BUILDER_ID, getProject().getName()));
-			return Optional.empty();
+			throw QiviconBuilderUtils.createCoreException(String.format("%s project %s: could not obtain bnd workspace repository!", BUILDER_ID, getProject().getName()), e);
 		}
 	}
 
