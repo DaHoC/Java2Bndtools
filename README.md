@@ -141,6 +141,5 @@ It is automatically overwritten for each new full build and the bnd workspace re
 See LICENSE file
 
 ## Open issues & to-do
+1. Reduce debug output
 1. Support incremental builds to some extent if possible
-1. Show context menu to add/remove the QiviconBndBuilder nature only for matching projects
-1. Check if there is nothing preventing this project to become open-source
