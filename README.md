@@ -18,7 +18,7 @@
 ## What is it and what does it do?
 It is an Eclipse plugin that provides integration of Java projects into a bndtools workspace, by making these Java projects available in a local bndtools repository.
 
-![Example Eclipse flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/ExampleFlow.jpg "Example Eclipse flow")
+![Depicting Eclipse flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/ExampleFlow.jpg "Depicting Eclipse flow")
 
 ## Prerequisites
 1. Eclipse workspace with bndtools workspace with the mandatory bnd cnf project folder and a bnd repository named "Local"
@@ -30,7 +30,7 @@ Manifest-Version: 1.0
 Bundle-Name: Dummy project
 Bundle-SymbolicName: com.foo.bar
 Bundle-ManifestVersion: 2
-Bundle-Version: 2.0.0
+Bundle-Version: 1.0.0
 ```
 If your bnd repositories are missing the `Local` repository, you can add the entry to the main `cnf/build.bnd` file:
 
@@ -105,6 +105,9 @@ For the Java project add the `com.qivicon.bndbuilder.qiviconbndbuildernature` an
 	</projectDescription>
 
 ### Example usage
+
+![Sample Java project integration flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/HowTo.gif "Sample Java project integration flow")
+
 Consider a _Java_ project in your bndtools workspace that has a `Bundle-SymbolicName` of `com.foo.java` and a `Bundle-Version` of `2.1.0` defined in its `META-INF/MANIFEST.MF`.
 
 Besides this project, the `com.bar.bnd` _bndtools_ project is present in the same Eclipse workspace, which is to be configured to require the `com.foo.java` bundle as dependency.
@@ -129,7 +132,6 @@ This temporary JAR file is passed via stream to the bnd workspace "Local" reposi
 It is automatically overwritten for each new full build and the bnd workspace repository is refreshed automatically.
 
 ## Changelog
-
 * 1.5.0 Added context menu to batch-add and -remove the Qivicon bnd builder nature, major refactoring, set license EPL-2.0
 * 1.4.0 Include package sources to provide Javadoc
 * 1.3.0 Added nature to add and remove corresponding builder, renaming, cleanups
@@ -141,5 +143,13 @@ It is automatically overwritten for each new full build and the bnd workspace re
 See LICENSE file
 
 ## Open issues & to-do
-1. Support incremental builds to some extent if possible
-1. If MANIFEST.MF is missing, do some best-effort setting Version 1.0 and bsn=project name
+1. Support incremental builds to some extent (if possible and feasible at all)
+1. If MANIFEST.MF is missing, use a best-effort-approach, e.g. by setting
+
+```
+Manifest-Version: 1.0
+Bundle-Name: <Eclipse project name>
+Bundle-SymbolicName: <Eclipse project name>
+Bundle-ManifestVersion: 2
+Bundle-Version: 0.0.0
+```
