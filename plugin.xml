@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-	<extension id="qiviconbndbuildernature" name="QIVICON bnd builder nature" point="org.eclipse.core.resources.natures">
+	<extension id="java2bndnature" name="Java to bnd nature" point="org.eclipse.core.resources.natures">
 		<runtime>
-			<run class="com.qivicon.bndbuilder.QiviconBuilderNature"/>
+			<run class="de.janhendriks.java2bnd.Nature"/>
 		</runtime>
 		<requires-nature id="org.eclipse.jdt.core.javanature"/>
-		<builder id="com.qivicon.bndbuilder.qiviconbndbuilder"/>
+		<builder id="de.janhendriks.java2bnd.builder"/>
 	</extension>
 
-	<extension id="qiviconbndbuilder" name="QIVICON bnd builder" point="org.eclipse.core.resources.builders">
+	<extension id="java2bndbuilder" name="Java to bnd builder" point="org.eclipse.core.resources.builders">
 		<builder hasNature="true">
-			<run class="com.qivicon.bndbuilder.QiviconBuilder"/>
+			<run class="de.janhendriks.java2bnd.Builder"/>
 		</builder>
 	</extension>
 
 	<extension point="org.eclipse.ui.menus">
 		<menuContribution locationURI="popup:org.eclipse.ui.popup.any">
 			<command 
-				commandId="com.qivicon.bndbuilder.AddNatureCommand"
-				label="Add QiviconBndBuilder nature"
+				commandId="de.janhendriks.java2bnd.AddNatureCommand"
+				label="Add Java2bnd nature"
 				style="push">
 				<visibleWhen checkEnabled="false">
 					<with variable="activeMenuSelection">
@@ -28,7 +28,7 @@
 								<and>
 									<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.jdt.core.javanature" />
 									<not>
-										<test property="org.eclipse.core.resources.projectNature" value="com.qivicon.bndbuilder.qiviconbndbuildernature" />
+										<test property="org.eclipse.core.resources.projectNature" value="de.janhendriks.java2bnd.nature" />
 									</not>
 									<not>
 										<test property="org.eclipse.core.resources.projectNature" value="bndtools.core.bndnature" />
@@ -40,8 +40,8 @@
 				</visibleWhen>
 			</command>
 			<command
-				commandId="com.qivicon.bndbuilder.RemoveNatureCommand"
-				label="Remove QiviconBndBuilder nature"
+				commandId="de.janhendriks.java2bnd.RemoveNatureCommand"
+				label="Remove Java2bnd nature"
 				style="push">
 				<visibleWhen checkEnabled="false">
 					<with variable="activeMenuSelection">
@@ -49,7 +49,7 @@
 							<adapt type="org.eclipse.core.resources.IResource">
 								<and>
 									<test property="org.eclipse.core.resources.projectNature" value="org.eclipse.jdt.core.javanature" />
-									<test property="org.eclipse.core.resources.projectNature" value="com.qivicon.bndbuilder.qiviconbndbuildernature" />
+									<test property="org.eclipse.core.resources.projectNature" value="de.janhendriks.java2bnd.nature" />
 									<not>
 										<test property="org.eclipse.core.resources.projectNature" value="bndtools.core.bndnature" />
 									</not>
@@ -63,20 +63,20 @@
 	</extension>
 	<extension point="org.eclipse.ui.handlers">
 		<handler
-			commandId="com.qivicon.bndbuilder.AddNatureCommand"
-			class="com.qivicon.bndbuilder.AddNatureCommand"/>
+			commandId="de.janhendriks.java2bnd.AddNatureCommand"
+			class="de.janhendriks.java2bnd.AddNatureCommand"/>
 		<handler
-			commandId="com.qivicon.bndbuilder.RemoveNatureCommand"
-			class="com.qivicon.bndbuilder.RemoveNatureCommand"/>
+			commandId="de.janhendriks.java2bnd.RemoveNatureCommand"
+			class="de.janhendriks.java2bnd.RemoveNatureCommand"/>
 	</extension>
 	<extension point="org.eclipse.ui.commands">
 		<command
-			id="com.qivicon.bndbuilder.AddNatureCommand"
-			name="Add QiviconBuilder nature"
-			description=""/>
+			id="de.janhendriks.java2bnd.AddNatureCommand"
+			name="Add Java2bnd nature"
+			description="Add Java2bnd nature"/>
 		<command
-			id="com.qivicon.bndbuilder.RemoveNatureCommand"
-			name="Remove QiviconBuilder nature"
-			description="Remove QiviconBuilder nature"/>
+			id="de.janhendriks.java2bnd.RemoveNatureCommand"
+			name="Remove Java2bnd nature"
+			description="Remove Java2bnd nature"/>
 	</extension>
 </plugin>

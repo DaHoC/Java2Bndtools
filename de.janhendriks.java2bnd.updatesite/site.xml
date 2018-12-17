@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="Java to bnd builder update site" url="https://gitlab.com/DaHoC/java2bndtools/raw/master/de.janhendriks.java2bnd.updatesite/">
+      Java to bnd builder update site
+   </description>
+   <feature url="features/de.janhendriks.java2bnd.feature_1.6.0.201812171551.jar" id="de.janhendriks.java2bnd.feature" version="1.6.0.201812171551"/>
+</site>

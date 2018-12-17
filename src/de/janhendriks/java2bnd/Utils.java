@@ -1,4 +1,4 @@
-package com.qivicon.bndbuilder;
+package de.janhendriks.java2bnd;
 
 import static java.util.Objects.requireNonNull;
 
@@ -34,9 +34,9 @@ import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 /**
- * Utilities class for the Qivicon bnd builder and nature containing static convenience methods to avoid code duplication.
+ * Utilities class for the Java to bnd builder and nature containing static convenience methods to avoid code duplication.
  */
-abstract class QiviconBuilderUtils {
+abstract class Utils {
 	
 	// Messages thrown as NPE when this is a null value (instead of e.g. an empty array which is valid)
 	private static final String PROJECT_NULL_ERROR = "Project must not be null!";
@@ -50,32 +50,32 @@ abstract class QiviconBuilderUtils {
 
 	private static final int INTERNAL_ERROR = -10001;
 
-	static final String CORE_PLUGIN_ID = "com.qivicon.bndbuilder";
+	static final String CORE_PLUGIN_ID = "de.janhendriks.java2bnd";
 	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
 	static final boolean DEBUG_OUTPUT = true;
 
-	static final Consumer<IProject> ADD_QIVICONBNDBUILDER_NATURE = project -> {
+	static final Consumer<IProject> ADD_JAVA_TO_BNDBUILDER_NATURE = project -> {
 		try {
-			addQiviconBndBuilderNature(project, null);
+			addJavaToBndNature(project, null);
 		} catch (CoreException e) {
 			// Ignore and skip this project and hide error, there's not much we can do here
 		}
 	};
-	static final Consumer<IProject> REMOVE_QIVICONBNDBUILDER_NATURE = project -> {
+	static final Consumer<IProject> REMOVE_JAVA_TO_BNDBUILDER_NATURE = project -> {
 		try {
-			removeQiviconBndBuilderNature(project, null);
+			removeJavaToBndNature(project, null);
 		} catch (CoreException e) {
 			// Ignore and skip this project and hide error, there's not much we can do here
 		}
 	};
 
-	private QiviconBuilderUtils() {
-		throw new IllegalAccessError("Cannot instantiate QiviconBuilderUtils class");
+	private Utils() {
+		throw new IllegalAccessError("Cannot instantiate " + this.getClass().getName());
 	}
 
 	/**
 	 * Check if project has the Java nature but does not at the same time have the Bnd project nature assigned.
-	 * Can be used to selectively add the QiviconBndBuilder (nature) to matching projects.
+	 * Can be used to selectively add the Java2Bnd project builder and nature to matching projects.
 	 * 
 	 * @param project project to check
 	 * @return {@code true} if given project has a Java nature and not a Bnd nature assigned to it, {@code false} otherwise
@@ -94,13 +94,13 @@ abstract class QiviconBuilderUtils {
 	}
 
 	/**
-	 * Check if the given project has the QiviconBndBuilder project nature and corresponding builder assigned.
+	 * Check if the given project has the Java2Bnd project nature and corresponding builder assigned.
 	 * 
 	 * @param project project to check
-	 * @return {@code true} if the project has the QiviconBndBuilder project nature and corresponding builder assigned to it, {@code false} otherwise
+	 * @return {@code true} if the project has the Java2Bnd project nature and corresponding builder assigned to it, {@code false} otherwise
 	 */
-	static final boolean isQiviconBndBuilderProject(final IProject project) {
-		return isMatchingProject(project, QiviconBuilderNature.NATURE_ID, QiviconBuilder.BUILDER_ID); 
+	static final boolean isJavaToBndProject(final IProject project) {
+		return isMatchingProject(project, Nature.NATURE_ID, Builder.BUILDER_ID); 
 	}
 
 	private static boolean isMatchingProject(final IProject project, final String natureId, final String builderId) {
@@ -143,37 +143,36 @@ abstract class QiviconBuilderUtils {
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
 		final ICommand[] commands = description.getBuildSpec();
 		requireNonNull(commands, PROJECT_BUILDERS_NULL_ERROR);
-		int qiviconBuilderIndex = -1;
+		int javaToBndBuilderIndex = -1;
 		int javaBuilderIndex = -1;
 		// Determine builder positions from project's build specification
 		for (int i = 0; i < commands.length; i++) {
 			if (JavaCore.BUILDER_ID.equals(commands[i].getBuilderName())) {
 				javaBuilderIndex = i;
-			} else if (QiviconBuilder.BUILDER_ID.equals(commands[i].getBuilderName())) {
-				qiviconBuilderIndex = i;
+			} else if (Builder.BUILDER_ID.equals(commands[i].getBuilderName())) {
+				javaToBndBuilderIndex = i;
 			}
 			// Exit loop if both indices have already been found
-			if (javaBuilderIndex != -1 && qiviconBuilderIndex != -1) {
+			if (javaBuilderIndex != -1 && javaToBndBuilderIndex != -1) {
 				break;
 			}
 		}
 		/* 
-		 * If the Qivicon bnd builder is to be executed before the Java builder, 
-		 * swap their order.
-		 * This should actually never occur because the Qivicon bnd builder can
+		 * If the Java to bnd builder is to be executed before the Java builder, swap their order.
+		 * This should actually never occur because the Java2Bnd builder can
 		 * only be added to a Java project (i.e. where a java builder is already
 		 * present) and only then gets added at the end
 		 */
-		if (qiviconBuilderIndex < javaBuilderIndex) {
-			final ICommand qiviconBuilder = commands[qiviconBuilderIndex];
-			commands[qiviconBuilderIndex] = commands[javaBuilderIndex];
-			commands[javaBuilderIndex] = qiviconBuilder;
+		if (javaToBndBuilderIndex < javaBuilderIndex) {
+			final ICommand javaToBndBuilder = commands[javaToBndBuilderIndex];
+			commands[javaToBndBuilderIndex] = commands[javaBuilderIndex];
+			commands[javaBuilderIndex] = javaToBndBuilder;
 		}
 		description.setBuildSpec(commands);
 		project.setDescription(description, monitor);
 	}
 
-	static final void addQiviconBndBuilder(final IProject project, final IProgressMonitor monitor) throws CoreException {
+	static final void addJavaToBndBuilder(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -181,7 +180,7 @@ abstract class QiviconBuilderUtils {
 		requireNonNull(commands, PROJECT_BUILDERS_NULL_ERROR);
 		// add builder to project
 		final ICommand command = description.newCommand();
-		command.setBuilderName(QiviconBuilder.BUILDER_ID);
+		command.setBuilderName(Builder.BUILDER_ID);
 		final ICommand[] newCommands = new ICommand[commands.length + 1];
 		// Add it after all other builders, especially after the Java builder
 		System.arraycopy(commands, 0, newCommands, 0, commands.length);
@@ -190,7 +189,7 @@ abstract class QiviconBuilderUtils {
 		project.setDescription(description, monitor);
 	}
 
-	static final void addQiviconBndBuilderNature(final IProject project, final IProgressMonitor monitor) throws CoreException {
+	static final void addJavaToBndNature(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
@@ -198,7 +197,7 @@ abstract class QiviconBuilderUtils {
 		requireNonNull(natures, PROJECT_NATURES_NULL_ERROR);
 		final String[] newNatures = new String[natures.length + 1];
 		System.arraycopy(natures, 0, newNatures, 0, natures.length);
-		newNatures[natures.length] = QiviconBuilderNature.NATURE_ID;
+		newNatures[natures.length] = Nature.NATURE_ID;
 		// Validate the natures
 		final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		final IStatus status = workspace.validateNatureSet(newNatures);
@@ -210,26 +209,26 @@ abstract class QiviconBuilderUtils {
 		project.setDescription(description, monitor);
 	}
 
-	static final void removeQiviconBndBuilder(final IProject project, final IProgressMonitor monitor) throws CoreException {
+	static final void removeJavaToBndBuilder(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
 		final ICommand[] commands = description.getBuildSpec();
 		requireNonNull(commands, PROJECT_BUILDERS_NULL_ERROR);
-		final ICommand[] newCommands = Stream.of(commands).filter(Objects::nonNull).filter(com -> !(QiviconBuilder.BUILDER_ID.equals(com.getBuilderName()))).toArray(ICommand[]::new);
+		final ICommand[] newCommands = Stream.of(commands).filter(Objects::nonNull).filter(com -> !(Builder.BUILDER_ID.equals(com.getBuilderName()))).toArray(ICommand[]::new);
 		if (commands.length > newCommands.length) {
 			description.setBuildSpec(newCommands);
 			project.setDescription(description, monitor);
 		}
 	}
 
-	static final void removeQiviconBndBuilderNature(final IProject project, final IProgressMonitor monitor) throws CoreException {
+	static final void removeJavaToBndNature(final IProject project, final IProgressMonitor monitor) throws CoreException {
 		requireNonNull(project, PROJECT_NULL_ERROR);
 		final IProjectDescription description = project.getDescription();
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
 		final String[] natures = description.getNatureIds();
 		requireNonNull(natures, PROJECT_NATURES_NULL_ERROR);
-		final String[] newNatures = Stream.of(natures).filter(Objects::nonNull).filter(not(QiviconBuilderNature.NATURE_ID::equals)).toArray(String[]::new);
+		final String[] newNatures = Stream.of(natures).filter(Objects::nonNull).filter(not(Nature.NATURE_ID::equals)).toArray(String[]::new);
 		// Validate the natures
 		final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		final IStatus status = workspace.validateNatureSet(newNatures);
@@ -248,7 +247,7 @@ abstract class QiviconBuilderUtils {
 	 * @return optional containing manifest location or empty optional if not found
 	 */
 	static final Optional<IPath> getManifestLocation(final IProject project) {
-		final IResource manifestFileResource = project.findMember(QiviconBuilderUtils.MANIFEST_LOCATION);
+		final IResource manifestFileResource = project.findMember(Utils.MANIFEST_LOCATION);
 		if (manifestFileResource == null || !manifestFileResource.exists()) {
 			// Skip or abort builder, as it will not be a valid JAR file without MANIFEST
 			return Optional.empty();
@@ -291,7 +290,7 @@ abstract class QiviconBuilderUtils {
 		if (message == null) {
 			message = ""; //$NON-NLS-1$
 		}
-		return new CoreException(new Status(IStatus.ERROR, QiviconBuilder.BUILDER_ID, INTERNAL_ERROR, message, exception));
+		return new CoreException(new Status(IStatus.ERROR, Builder.BUILDER_ID, INTERNAL_ERROR, message, exception));
 	}
 
 	static final MessageConsoleStream getStreamForLoggingToEclipseConsole(final String consoleName) {

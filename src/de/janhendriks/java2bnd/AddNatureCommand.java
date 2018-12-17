@@ -1,4 +1,6 @@
-package com.qivicon.bndbuilder;
+package de.janhendriks.java2bnd;
+
+import static de.janhendriks.java2bnd.Utils.not;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -10,16 +12,16 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.handlers.HandlerUtil;
 
-public final class RemoveNatureCommand extends AbstractHandler {
+public final class AddNatureCommand extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent executionEvent) throws ExecutionException {
 		final IStructuredSelection selection = HandlerUtil.getCurrentStructuredSelection(executionEvent);
-		final Collection<IProject> selectedProjects = QiviconBuilderUtils.extractSelectedJavaProjects(selection);
+		final Collection<IProject> selectedProjects = Utils.extractSelectedJavaProjects(selection);
 		selectedProjects.stream().filter(Objects::nonNull)
-				.filter(QiviconBuilderUtils::isJavaProjectAndNotBndProject)
-				.filter(QiviconBuilderUtils::isQiviconBndBuilderProject)
-				.forEach(QiviconBuilderUtils.REMOVE_QIVICONBNDBUILDER_NATURE);
+				.filter(Utils::isJavaProjectAndNotBndProject)
+				.filter(not(Utils::isJavaToBndProject))
+				.forEach(Utils.ADD_JAVA_TO_BNDBUILDER_NATURE);
 		return null;
 	}
 

@@ -1,4 +1,4 @@
-package com.qivicon.bndbuilder;
+package de.janhendriks.java2bnd;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,14 +37,14 @@ import aQute.bnd.build.Workspace;
 import aQute.bnd.service.RepositoryPlugin;
 
 /**
- * Qivicon bnd builder for zipping compiled build artifacts of an arbitrary Java
+ * Java to bnd builder for zipping compiled build artifacts of an arbitrary Java
  * project into an JAR bundle file and copy it to a well-defined bnd workspace
  * repository location.
  */
-public final class QiviconBuilder extends IncrementalProjectBuilder {
+public final class Builder extends IncrementalProjectBuilder {
 
-	static final String BUILDER_ID = QiviconBuilderUtils.CORE_PLUGIN_ID + ".qiviconbndbuilder";
-	static final String BUILDER_NAME = "QIVICON bnd builder";
+	static final String BUILDER_ID = Utils.CORE_PLUGIN_ID + ".builder";
+	static final String BUILDER_NAME = "Java2bnd builder";
 
 	private static final String BUILDER_PROPERTIES_LOCATION = "META-INF/plugin.properties";
 
@@ -93,7 +93,7 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 		final SubMonitor subMonitor = SubMonitor.convert(monitor, 4);
 		subMonitor.setTaskName("Checking builder order");
 		subMonitor.subTask("Checking builder order");
-		QiviconBuilderUtils.checkBuilderOrdering(getProject(), subMonitor.split(1));
+		Utils.checkBuilderOrdering(getProject(), subMonitor.split(1));
 
 		subMonitor.setTaskName("Reading settings");
 		subMonitor.subTask("Reading settings");
@@ -124,9 +124,9 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 
 	private Optional<File> exportProjectIntoJarFile(final IProgressMonitor monitor) throws CoreException {
 		// Skip this project and display / log a hint that the builder could not proceed
-		final Optional<IPath> manifestLocationOpt = QiviconBuilderUtils.getManifestLocation(getProject());
+		final Optional<IPath> manifestLocationOpt = Utils.getManifestLocation(getProject());
 		if (!manifestLocationOpt.isPresent()) {
-			final String errorMessage = String.format("%s project %s: %s file not found, skipping project!", BUILDER_ID, getProject().getName(), QiviconBuilderUtils.MANIFEST_LOCATION);
+			final String errorMessage = String.format("%s project %s: %s file not found, skipping project!", BUILDER_ID, getProject().getName(), Utils.MANIFEST_LOCATION);
 			log(errorMessage);
 			return Optional.empty();
 		}
@@ -166,7 +166,7 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			tmpFile = File.createTempFile(filename + "-", ".jar");
 		} catch (IOException e) {
 			final String errorMessage = String.format("%s project %s: could not create temporary jar file!", BUILDER_ID, getProject().getName());
-			throw QiviconBuilderUtils.createCoreException(errorMessage, e);
+			throw Utils.createCoreException(errorMessage, e);
 		}
 		final IPath jarPath = Path.fromOSString(tmpFile.getAbsolutePath());
 
@@ -177,12 +177,12 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			jarFileExportOperation.run(monitor);
 		} catch (InvocationTargetException e) {
 			final String errorMessage = String.format("%s project %s: jar file export failed!", BUILDER_ID, getProject().getName());
-			throw QiviconBuilderUtils.createCoreException(errorMessage, e);
+			throw Utils.createCoreException(errorMessage, e);
 		} catch (InterruptedException e) {
 			// Restore interrupted state
 			Thread.currentThread().interrupt();
 			final String errorMessage = String.format("%s project %s: jar file export interrupted!", BUILDER_ID, getProject().getName());
-			throw QiviconBuilderUtils.createCoreException(errorMessage, e);
+			throw Utils.createCoreException(errorMessage, e);
 		}
 		return Optional.of(jarPackage.getJarLocation().toFile());
 	}
@@ -288,10 +288,10 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			bndWorkspaceRepository.get().put(jarFileInputStream, null);
 		} catch (IOException e) {
 			final String errorMessage = String.format("%s project %s: Error accessing jar bundle file %s!", BUILDER_ID, getProject().getName(), jarFile.getAbsolutePath());
-			throw QiviconBuilderUtils.createCoreException(errorMessage, e);
+			throw Utils.createCoreException(errorMessage, e);
 		} catch (Exception e) {
 			final String errorMessage = String.format("%s project %s: Could not copy jar bundle file %s into bnd workspace repository %s!", BUILDER_ID, getProject().getName(), jarFile.getAbsolutePath(), bndWorkspaceRepository.get().getLocation());
-			throw QiviconBuilderUtils.createCoreException(errorMessage, e);
+			throw Utils.createCoreException(errorMessage, e);
 		}
 	}
 
@@ -310,11 +310,11 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			// Prerequisite: bnd workspace repository with well-defined name must be present
 			final RepositoryPlugin bndWorkspaceRepository = bndWorkspace.getRepository(bndWorkspaceRepositoryName);
 			if (bndWorkspaceRepository == null) {
-				throw QiviconBuilderUtils.createCoreException(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName), null);
+				throw Utils.createCoreException(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName), null);
 			}
 			return Optional.ofNullable(bndWorkspaceRepository);
 		} catch (Exception e) {
-			throw QiviconBuilderUtils.createCoreException(String.format("%s project %s: could not obtain bnd workspace repository!", BUILDER_ID, getProject().getName()), e);
+			throw Utils.createCoreException(String.format("%s project %s: could not obtain bnd workspace repository!", BUILDER_ID, getProject().getName()), e);
 		}
 	}
 
@@ -348,7 +348,7 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 					|| bndWorkspaceRepositoryProperty == null) {
 				// Wrap into CoreException
 				final String message = String.format("Could not read properties file %s values!", BUILDER_PROPERTIES_LOCATION);
-				throw QiviconBuilderUtils.createCoreException(message, null);
+				throw Utils.createCoreException(message, null);
 			}
 			this.bndWorkspaceRepositoryName = bndWorkspaceRepositoryProperty.trim();
 			log(String.format("Bnd workspace repository to use=%s", this.bndWorkspaceRepositoryName));
@@ -361,7 +361,7 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 		} catch (IOException e) {
 			// Wrap into CoreException
 			final String message = String.format("Could not read properties file %s!", BUILDER_PROPERTIES_LOCATION);
-			throw QiviconBuilderUtils.createCoreException(message, e);
+			throw Utils.createCoreException(message, e);
 		}
 	}
 
@@ -371,11 +371,11 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 	}
 
 	private void log(final String message) {
-		if (!QiviconBuilderUtils.DEBUG_OUTPUT) {
+		if (!Utils.DEBUG_OUTPUT) {
 			return;
 		}
 		if (this.consoleStream == null) {
-			this.consoleStream = QiviconBuilderUtils.getStreamForLoggingToEclipseConsole(BUILDER_NAME + " console");
+			this.consoleStream = Utils.getStreamForLoggingToEclipseConsole(BUILDER_NAME + " console");
 			this.consoleStream.setActivateOnWrite(true);
 		}
 		this.consoleStream.println(message);
