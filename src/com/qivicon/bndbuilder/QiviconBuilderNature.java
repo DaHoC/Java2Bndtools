@@ -77,4 +77,5 @@ public final class QiviconBuilderNature implements IProjectNature {
 			this.consoleStream = null;
 		}
 	}
+
 }

@@ -16,7 +16,7 @@
 1. [Open issues & to-do](#open-issues-to-do)
 
 ## What is it and what does it do?
-It is an Eclipse plugin that provides integration of Java projects into a bndtools workspace, by making java projects available in a local bndtools repository.
+It is an Eclipse plugin that provides integration of Java projects into a bndtools workspace, by making these Java projects available in a local bndtools repository.
 
 ![Example Eclipse flow](https://qivicon-wbench.psst.t-online.corp/gitlab/jan.hendriks/QiviconBndBuilder/raw/master/resources/ExampleFlow.jpg "Example Eclipse flow")
 
@@ -141,5 +141,5 @@ It is automatically overwritten for each new full build and the bnd workspace re
 See LICENSE file
 
 ## Open issues & to-do
-1. Reduce debug output
 1. Support incremental builds to some extent if possible
+1. If MANIFEST.MF is missing, do some best-effort setting Version 1.0 and bsn=project name

@@ -2,7 +2,6 @@ package com.qivicon.bndbuilder;
 
 import static java.util.Objects.requireNonNull;
 
-import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -299,11 +298,7 @@ abstract class QiviconBuilderUtils {
 		final MessageConsole console = findOrCreateConsole(consoleName);
 		ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
 		ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
-		final MessageConsoleStream stream = console.newMessageStream();
-		// Redirect system.err and system.out to the Eclipse console as well
-		System.setErr(new PrintStream(stream));
-		System.setOut(new PrintStream(stream));
-		return stream;
+		return console.newMessageStream();
 	}
 
 	private static final MessageConsole findOrCreateConsole(final String name) {

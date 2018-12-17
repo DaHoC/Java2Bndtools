@@ -370,6 +370,17 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 		// nothing to initialize
 	}
 
+	private void log(final String message) {
+		if (!QiviconBuilderUtils.DEBUG_OUTPUT) {
+			return;
+		}
+		if (this.consoleStream == null) {
+			this.consoleStream = QiviconBuilderUtils.getStreamForLoggingToEclipseConsole(BUILDER_NAME + " console");
+			this.consoleStream.setActivateOnWrite(true);
+		}
+		this.consoleStream.println(message);
+	}
+
 	@Override
 	protected void clean(IProgressMonitor monitor) {
 		if (this.consoleStream != null) {
@@ -380,17 +391,6 @@ public final class QiviconBuilder extends IncrementalProjectBuilder {
 			}
 			consoleStream = null;
 		}
-	}
-
-	private void log(final String message) {
-		if (!QiviconBuilderUtils.DEBUG_OUTPUT) {
-			return;
-		}
-		if (this.consoleStream == null) {
-			this.consoleStream = QiviconBuilderUtils.getStreamForLoggingToEclipseConsole(BUILDER_NAME + " console");
-			this.consoleStream.setActivateOnWrite(true);
-		}
-		this.consoleStream.println(message);
 	}
 
 }
