@@ -1,0 +1,7 @@
+* 1.6.0 Renamed project and minor changes in preparation to make it open-source
+* 1.5.0 Added context menu to batch-add and -remove the Java2bndtools builder nature, major refactoring, set license EPL-2.0
+* 1.4.0 Include package sources to provide Javadoc
+* 1.3.0 Added nature to add and remove corresponding builder, renaming, cleanups
+* 1.2.0 Added possibility to exlude project files and folders from export
+* 1.1.0 Use Eclipse-internal JAR archiver
+* 1.0.0 Incremental version
