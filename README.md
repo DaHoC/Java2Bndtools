@@ -11,9 +11,7 @@
     1. [Alternative way 2: Manual way (not recommended)](#alternative-way-2-manual-way-not-recommended)
 1. [Example usage](#example-usage)
 1. [How does it work?](#how-does-it-work)
-1. [Changelog](#changelog)
-1. [License](#license)
-1. [Open issues & to-do](#open-issues-to-do)
+1. [To-do](#to-do)
 
 ## What is it and what does it do?
 It is an Eclipse plugin that provides integration of Java projects into a bndtools workspace, by making these Java projects available in a local bndtools repository.
@@ -126,15 +124,6 @@ During each *full* build of this Java project, the Java2bndtools builder packs g
 
 This temporary JAR file is passed via stream to the bnd workspace "Local" repository where it should appear.
 It is automatically overwritten for each new full build and the bnd workspace repository is refreshed automatically.
-
-## Changelog
-* 1.6.0 Renamed project and minor changes in preparation to make it open-source
-* 1.5.0 Added context menu to batch-add and -remove the Java2bndtools builder nature, major refactoring, set license EPL-2.0
-* 1.4.0 Include package sources to provide Javadoc
-* 1.3.0 Added nature to add and remove corresponding builder, renaming, cleanups
-* 1.2.0 Added possibility to exlude project files and folders from export
-* 1.1.0 Use Eclipse-internal JAR archiver
-* 1.0.0 Incremental version
 
 ## To-do
 1. Support incremental builds to some extent (if possible and feasible at all)
