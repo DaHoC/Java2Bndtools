@@ -136,11 +136,9 @@ It is automatically overwritten for each new full build and the bnd workspace re
 * 1.1.0 Use Eclipse-internal JAR archiver
 * 1.0.0 Incremental version
 
-## License
-See LICENSE file
-
-## Open issues & to-do
+## To-do
 1. Support incremental builds to some extent (if possible and feasible at all)
+1. Provide minimal sample workspace (from the example)
 1. If MANIFEST.MF is missing, use a best-effort-approach, e.g. by setting
 
 ```
