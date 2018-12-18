@@ -335,10 +335,9 @@ public final class Builder extends IncrementalProjectBuilder {
 		if (this.excludeFolders != null && this.excludeFiles != null) {
 			return;
 		}
-		final Properties properties = new Properties();
-
-		try (final InputStream input = getClass().getClassLoader().getResourceAsStream(Utils.BUILDER_PROPERTIES_LOCATION);
+		try (	final InputStream input = getClass().getClassLoader().getResourceAsStream(Utils.BUILDER_PROPERTIES_LOCATION);
 				final Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+			final Properties properties = new Properties();
 			properties.load(reader);
 			final String excludeFoldersProperty = properties.getProperty("exclude_folders");
 			final String excludeFilesProperty = properties.getProperty("exclude_files");
