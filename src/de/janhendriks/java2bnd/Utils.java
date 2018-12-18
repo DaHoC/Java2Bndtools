@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -37,7 +36,21 @@ import org.eclipse.ui.console.MessageConsoleStream;
  * Utilities class for the Java to bnd builder and nature containing static convenience methods to avoid code duplication.
  */
 abstract class Utils {
-	
+
+	static final String CORE_PLUGIN_ID = "de.janhendriks.java2bnd";
+
+	static final String BUILDER_ID = Utils.CORE_PLUGIN_ID + ".builder";
+	static final String BUILDER_NAME = "Java2bnd builder";
+
+	static final String NATURE_ID = Utils.CORE_PLUGIN_ID + ".nature";
+	static final String NATURE_NAME = "Java2bnd nature";
+
+	static final String BUILDER_PROPERTIES_LOCATION = "META-INF/plugin.properties";
+	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
+	static final boolean DEBUG_OUTPUT = true;
+
+	private static final int INTERNAL_ERROR = -10001;
+
 	// Messages thrown as NPE when this is a null value (instead of e.g. an empty array which is valid)
 	private static final String PROJECT_NULL_ERROR = "Project must not be null!";
 	private static final String PROJECT_DESCRIPTION_NULL_ERROR = "Project description must not be null!";
@@ -47,27 +60,6 @@ abstract class Utils {
 	// Get from external bndtools API
 	private static final String BND_NATURE_ID = BndtoolsConstants.NATURE_ID;
 	private static final String BND_BUILDER_ID = BndtoolsConstants.BUILDER_ID;
-
-	private static final int INTERNAL_ERROR = -10001;
-
-	static final String CORE_PLUGIN_ID = "de.janhendriks.java2bnd";
-	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
-	static final boolean DEBUG_OUTPUT = true;
-
-	static final Consumer<IProject> ADD_JAVA_TO_BNDBUILDER_NATURE = project -> {
-		try {
-			addJavaToBndNature(project, null);
-		} catch (CoreException e) {
-			// Ignore and skip this project and hide error, there's not much we can do here
-		}
-	};
-	static final Consumer<IProject> REMOVE_JAVA_TO_BNDBUILDER_NATURE = project -> {
-		try {
-			removeJavaToBndNature(project, null);
-		} catch (CoreException e) {
-			// Ignore and skip this project and hide error, there's not much we can do here
-		}
-	};
 
 	private Utils() {
 		throw new IllegalAccessError("Cannot instantiate " + this.getClass().getName());
@@ -100,7 +92,7 @@ abstract class Utils {
 	 * @return {@code true} if the project has the Java2Bnd project nature and corresponding builder assigned to it, {@code false} otherwise
 	 */
 	static final boolean isJavaToBndProject(final IProject project) {
-		return isMatchingProject(project, Nature.NATURE_ID, Builder.BUILDER_ID); 
+		return isMatchingProject(project, NATURE_ID, BUILDER_ID); 
 	}
 
 	private static boolean isMatchingProject(final IProject project, final String natureId, final String builderId) {
@@ -149,7 +141,7 @@ abstract class Utils {
 		for (int i = 0; i < commands.length; i++) {
 			if (JavaCore.BUILDER_ID.equals(commands[i].getBuilderName())) {
 				javaBuilderIndex = i;
-			} else if (Builder.BUILDER_ID.equals(commands[i].getBuilderName())) {
+			} else if (BUILDER_ID.equals(commands[i].getBuilderName())) {
 				javaToBndBuilderIndex = i;
 			}
 			// Exit loop if both indices have already been found
@@ -180,7 +172,7 @@ abstract class Utils {
 		requireNonNull(commands, PROJECT_BUILDERS_NULL_ERROR);
 		// add builder to project
 		final ICommand command = description.newCommand();
-		command.setBuilderName(Builder.BUILDER_ID);
+		command.setBuilderName(BUILDER_ID);
 		final ICommand[] newCommands = new ICommand[commands.length + 1];
 		// Add it after all other builders, especially after the Java builder
 		System.arraycopy(commands, 0, newCommands, 0, commands.length);
@@ -197,7 +189,7 @@ abstract class Utils {
 		requireNonNull(natures, PROJECT_NATURES_NULL_ERROR);
 		final String[] newNatures = new String[natures.length + 1];
 		System.arraycopy(natures, 0, newNatures, 0, natures.length);
-		newNatures[natures.length] = Nature.NATURE_ID;
+		newNatures[natures.length] = NATURE_ID;
 		// Validate the natures
 		final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		final IStatus status = workspace.validateNatureSet(newNatures);
@@ -215,7 +207,7 @@ abstract class Utils {
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
 		final ICommand[] commands = description.getBuildSpec();
 		requireNonNull(commands, PROJECT_BUILDERS_NULL_ERROR);
-		final ICommand[] newCommands = Stream.of(commands).filter(Objects::nonNull).filter(com -> !(Builder.BUILDER_ID.equals(com.getBuilderName()))).toArray(ICommand[]::new);
+		final ICommand[] newCommands = Stream.of(commands).filter(Objects::nonNull).filter(com -> !(BUILDER_ID.equals(com.getBuilderName()))).toArray(ICommand[]::new);
 		if (commands.length > newCommands.length) {
 			description.setBuildSpec(newCommands);
 			project.setDescription(description, monitor);
@@ -228,7 +220,7 @@ abstract class Utils {
 		requireNonNull(description, PROJECT_DESCRIPTION_NULL_ERROR);
 		final String[] natures = description.getNatureIds();
 		requireNonNull(natures, PROJECT_NATURES_NULL_ERROR);
-		final String[] newNatures = Stream.of(natures).filter(Objects::nonNull).filter(not(Nature.NATURE_ID::equals)).toArray(String[]::new);
+		final String[] newNatures = Stream.of(natures).filter(Objects::nonNull).filter(not(NATURE_ID::equals)).toArray(String[]::new);
 		// Validate the natures
 		final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		final IStatus status = workspace.validateNatureSet(newNatures);
@@ -290,7 +282,7 @@ abstract class Utils {
 		if (message == null) {
 			message = ""; //$NON-NLS-1$
 		}
-		return new CoreException(new Status(IStatus.ERROR, Builder.BUILDER_ID, INTERNAL_ERROR, message, exception));
+		return new CoreException(new Status(IStatus.ERROR, BUILDER_ID, INTERNAL_ERROR, message, exception));
 	}
 
 	static final MessageConsoleStream getStreamForLoggingToEclipseConsole(final String consoleName) {

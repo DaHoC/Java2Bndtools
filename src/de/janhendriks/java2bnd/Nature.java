@@ -14,16 +14,13 @@ import org.eclipse.ui.console.MessageConsoleStream;
  */
 public final class Nature implements IProjectNature {
 
-	static final String NATURE_ID = Utils.CORE_PLUGIN_ID + ".nature";
-	static final String NATURE_NAME = "Java2bnd nature";
-
 	private MessageConsoleStream consoleStream;
 	private IProject project;
 
 	@Override
 	public void configure() throws CoreException {
 		// only called once the nature has been set
-		log(String.format("%s: configure called, adding %s if not already present", Utils.CORE_PLUGIN_ID, Builder.BUILDER_NAME));
+		log(String.format("%s: configure called, adding %s if not already present", Utils.CORE_PLUGIN_ID, Utils.BUILDER_NAME));
 		if (Utils.isJavaToBndProject(project) || !Utils.isJavaProjectAndNotBndProject(project)) {
 			log(String.format("%s: configure finished, project already was setup correctly or was not a Java project or had a bnd nature assigned to it", Utils.CORE_PLUGIN_ID));
 			return;
@@ -36,7 +33,7 @@ public final class Nature implements IProjectNature {
 	@Override
 	public void deconfigure() throws CoreException {
 		// only called once the nature has been unset
-		log(String.format("%s: deconfigure called, removing %s if present", Utils.CORE_PLUGIN_ID, Builder.BUILDER_NAME));
+		log(String.format("%s: deconfigure called, removing %s if present", Utils.CORE_PLUGIN_ID, Utils.BUILDER_NAME));
 		if (!Utils.isJavaToBndProject(project) || !Utils.isJavaProjectAndNotBndProject(project)) {
 			log(String.format("%s: deconfigure finished, project already was setup correctly or was not a Java project or had a bnd nature assigned to it", Utils.CORE_PLUGIN_ID));
 			return;
@@ -61,7 +58,7 @@ public final class Nature implements IProjectNature {
 			return;
 		}
 		if (this.consoleStream == null) {
-			this.consoleStream = Utils.getStreamForLoggingToEclipseConsole(NATURE_NAME + " console");
+			this.consoleStream = Utils.getStreamForLoggingToEclipseConsole(Utils.NATURE_NAME + " console");
 			this.consoleStream.setActivateOnWrite(true);
 		}
 		this.consoleStream.println(message);

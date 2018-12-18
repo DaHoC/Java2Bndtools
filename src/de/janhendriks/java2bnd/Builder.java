@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,11 +46,6 @@ import aQute.bnd.service.RepositoryPlugin;
  */
 public final class Builder extends IncrementalProjectBuilder {
 
-	static final String BUILDER_ID = Utils.CORE_PLUGIN_ID + ".builder";
-	static final String BUILDER_NAME = "Java2bnd builder";
-
-	private static final String BUILDER_PROPERTIES_LOCATION = "META-INF/plugin.properties";
-
 	/**
 	 * The well-defined name of the bnd workspace repository that the artifacts are
 	 * deployed to if the repo is present. "Local" is a repository created by
@@ -85,7 +83,7 @@ public final class Builder extends IncrementalProjectBuilder {
 
 	protected void incrementalBuild(final IResourceDelta delta, final IProgressMonitor monitor) {
 		// TODO Implement me
-		log(String.format("%s: Delta changes of %s (nothing done at the moment)", BUILDER_ID, delta.getFullPath().toString()));
+		log(String.format("%s: Delta changes of %s (nothing done at the moment)", Utils.BUILDER_ID, delta.getFullPath().toString()));
 	}
 
 	protected void fullBuild(final IProgressMonitor monitor) throws CoreException {
@@ -100,7 +98,7 @@ public final class Builder extends IncrementalProjectBuilder {
 		readFilesAndFoldersToExclude();
 		subMonitor.split(1);
 
-		log(String.format("%s: Exporting project %s", BUILDER_ID, getProject().getName()));
+		log(String.format("%s: Exporting project %s", Utils.BUILDER_ID, getProject().getName()));
 		subMonitor.setTaskName("Creating temporary jar file");
 		subMonitor.subTask("Creating temporary jar file");
 
@@ -126,14 +124,14 @@ public final class Builder extends IncrementalProjectBuilder {
 		// Skip this project and display / log a hint that the builder could not proceed
 		final Optional<IPath> manifestLocationOpt = Utils.getManifestLocation(getProject());
 		if (!manifestLocationOpt.isPresent()) {
-			final String errorMessage = String.format("%s project %s: %s file not found, skipping project!", BUILDER_ID, getProject().getName(), Utils.MANIFEST_LOCATION);
+			final String errorMessage = String.format("%s project %s: %s file not found, skipping project!", Utils.BUILDER_ID, getProject().getName(), Utils.MANIFEST_LOCATION);
 			log(errorMessage);
 			return Optional.empty();
 		}
 
 		final Object[] exportElements = retrieveSelectedElementsToExport();
 		if (exportElements == null || exportElements.length == 0) {
-			log(String.format("%s project %s: Nothing to export", BUILDER_ID, getProject().getName()));
+			log(String.format("%s project %s: Nothing to export", Utils.BUILDER_ID, getProject().getName()));
 			return Optional.empty();
 		}
 
@@ -162,10 +160,10 @@ public final class Builder extends IncrementalProjectBuilder {
 
 		File tmpFile = null;
 		try {
-			final String filename = (getProject().getName() != null ? getProject().getName() : BUILDER_ID);
+			final String filename = (getProject().getName() != null ? getProject().getName() : Utils.BUILDER_ID);
 			tmpFile = File.createTempFile(filename + "-", ".jar");
 		} catch (IOException e) {
-			final String errorMessage = String.format("%s project %s: could not create temporary jar file!", BUILDER_ID, getProject().getName());
+			final String errorMessage = String.format("%s project %s: could not create temporary jar file!", Utils.BUILDER_ID, getProject().getName());
 			throw Utils.createCoreException(errorMessage, e);
 		}
 		final IPath jarPath = Path.fromOSString(tmpFile.getAbsolutePath());
@@ -176,12 +174,12 @@ public final class Builder extends IncrementalProjectBuilder {
 		try {
 			jarFileExportOperation.run(monitor);
 		} catch (InvocationTargetException e) {
-			final String errorMessage = String.format("%s project %s: jar file export failed!", BUILDER_ID, getProject().getName());
+			final String errorMessage = String.format("%s project %s: jar file export failed!", Utils.BUILDER_ID, getProject().getName());
 			throw Utils.createCoreException(errorMessage, e);
 		} catch (InterruptedException e) {
 			// Restore interrupted state
 			Thread.currentThread().interrupt();
-			final String errorMessage = String.format("%s project %s: jar file export interrupted!", BUILDER_ID, getProject().getName());
+			final String errorMessage = String.format("%s project %s: jar file export interrupted!", Utils.BUILDER_ID, getProject().getName());
 			throw Utils.createCoreException(errorMessage, e);
 		}
 		return Optional.of(jarPackage.getJarLocation().toFile());
@@ -223,13 +221,13 @@ public final class Builder extends IncrementalProjectBuilder {
 				jproject = JavaCore.create(getProject());
 			}
 		} catch (CoreException ex) {
-			final String errorMessage = String.format("%s cannot obtain nature of project %s: %s!", BUILDER_ID, getProject().getName(), ex.getMessage());
+			final String errorMessage = String.format("%s cannot obtain nature of project %s: %s!", Utils.BUILDER_ID, getProject().getName(), ex.getMessage());
 			log(errorMessage);
 			return Optional.empty();
 		}
 
 		if (jproject == null || !jproject.exists()) {
-			final String errorMessage = String.format("%s project %s is not a Java project (anymore)!", BUILDER_ID, getProject().getName());
+			final String errorMessage = String.format("%s project %s is not a Java project (anymore)!", Utils.BUILDER_ID, getProject().getName());
 			log(errorMessage);
 			return Optional.empty();
 		}
@@ -287,10 +285,10 @@ public final class Builder extends IncrementalProjectBuilder {
 			// Put the given bundle as stream into the given bnd workspace repository.
 			bndWorkspaceRepository.get().put(jarFileInputStream, null);
 		} catch (IOException e) {
-			final String errorMessage = String.format("%s project %s: Error accessing jar bundle file %s!", BUILDER_ID, getProject().getName(), jarFile.getAbsolutePath());
+			final String errorMessage = String.format("%s project %s: Error accessing jar bundle file %s!", Utils.BUILDER_ID, getProject().getName(), jarFile.getAbsolutePath());
 			throw Utils.createCoreException(errorMessage, e);
 		} catch (Exception e) {
-			final String errorMessage = String.format("%s project %s: Could not copy jar bundle file %s into bnd workspace repository %s!", BUILDER_ID, getProject().getName(), jarFile.getAbsolutePath(), bndWorkspaceRepository.get().getLocation());
+			final String errorMessage = String.format("%s project %s: Could not copy jar bundle file %s into bnd workspace repository %s!", Utils.BUILDER_ID, getProject().getName(), jarFile.getAbsolutePath(), bndWorkspaceRepository.get().getLocation());
 			throw Utils.createCoreException(errorMessage, e);
 		}
 	}
@@ -298,23 +296,23 @@ public final class Builder extends IncrementalProjectBuilder {
 	private Optional<RepositoryPlugin> getBndWorkspaceRepository() throws CoreException {
 		final File bndWorkspaceDirectory = getBndWorkspaceDirectory();
 		if (bndWorkspaceDirectory == null) {
-			log(String.format("%s project %s: bnd workspace directory could not be determined!", BUILDER_ID, getProject().getName()));
+			log(String.format("%s project %s: bnd workspace directory could not be determined!", Utils.BUILDER_ID, getProject().getName()));
 			return Optional.empty();
 		}
 		try {
 			final Workspace bndWorkspace = Workspace.getWorkspace(bndWorkspaceDirectory);
 			if (bndWorkspace == null) {
-				log(String.format("%s project %s: bnd workspace could not be retrieved!", BUILDER_ID, getProject().getName()));
+				log(String.format("%s project %s: bnd workspace could not be retrieved!", Utils.BUILDER_ID, getProject().getName()));
 				return Optional.empty();
 			}
 			// Prerequisite: bnd workspace repository with well-defined name must be present
 			final RepositoryPlugin bndWorkspaceRepository = bndWorkspace.getRepository(bndWorkspaceRepositoryName);
 			if (bndWorkspaceRepository == null) {
-				throw Utils.createCoreException(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName), null);
+				throw Utils.createCoreException(String.format("%s project %s: bnd workspace repository '%s' could not be retrieved!", Utils.BUILDER_ID, getProject().getName(), bndWorkspaceRepositoryName), null);
 			}
 			return Optional.ofNullable(bndWorkspaceRepository);
 		} catch (Exception e) {
-			throw Utils.createCoreException(String.format("%s project %s: could not obtain bnd workspace repository!", BUILDER_ID, getProject().getName()), e);
+			throw Utils.createCoreException(String.format("%s project %s: could not obtain bnd workspace repository!", Utils.BUILDER_ID, getProject().getName()), e);
 		}
 	}
 
@@ -339,15 +337,16 @@ public final class Builder extends IncrementalProjectBuilder {
 		}
 		final Properties properties = new Properties();
 
-		try (final InputStream input = getClass().getClassLoader().getResourceAsStream(BUILDER_PROPERTIES_LOCATION)) {
-			properties.load(input);
+		try (final InputStream input = getClass().getClassLoader().getResourceAsStream(Utils.BUILDER_PROPERTIES_LOCATION);
+				final Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+			properties.load(reader);
 			final String excludeFoldersProperty = properties.getProperty("exclude_folders");
 			final String excludeFilesProperty = properties.getProperty("exclude_files");
 			final String bndWorkspaceRepositoryProperty = properties.getProperty("bnd_workspace_repository");
 			if (excludeFoldersProperty == null || excludeFilesProperty == null
 					|| bndWorkspaceRepositoryProperty == null) {
 				// Wrap into CoreException
-				final String message = String.format("Could not read properties file %s values!", BUILDER_PROPERTIES_LOCATION);
+				final String message = String.format("Could not read properties file %s values!", Utils.BUILDER_PROPERTIES_LOCATION);
 				throw Utils.createCoreException(message, null);
 			}
 			this.bndWorkspaceRepositoryName = bndWorkspaceRepositoryProperty.trim();
@@ -360,14 +359,9 @@ public final class Builder extends IncrementalProjectBuilder {
 			this.excludeFiles = Arrays.asList(excludeFilesArr);
 		} catch (IOException e) {
 			// Wrap into CoreException
-			final String message = String.format("Could not read properties file %s!", BUILDER_PROPERTIES_LOCATION);
+			final String message = String.format("Could not read properties file %s!", Utils.BUILDER_PROPERTIES_LOCATION);
 			throw Utils.createCoreException(message, e);
 		}
-	}
-
-	@Override
-	protected void startupOnInitialize() {
-		// nothing to initialize
 	}
 
 	private void log(final String message) {
@@ -375,7 +369,7 @@ public final class Builder extends IncrementalProjectBuilder {
 			return;
 		}
 		if (this.consoleStream == null) {
-			this.consoleStream = Utils.getStreamForLoggingToEclipseConsole(BUILDER_NAME + " console");
+			this.consoleStream = Utils.getStreamForLoggingToEclipseConsole(Utils.BUILDER_NAME + " console");
 			this.consoleStream.setActivateOnWrite(true);
 		}
 		this.consoleStream.println(message);
