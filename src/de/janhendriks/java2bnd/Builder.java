@@ -66,10 +66,16 @@ public final class Builder extends IncrementalProjectBuilder {
 		default:
 		case IncrementalProjectBuilder.FULL_BUILD:
 		case IncrementalProjectBuilder.CLEAN_BUILD:
+			if (Utils.hasJavaBuildErrors(getProject())) {
+				return new IProject[0];
+			}
 			fullBuild(monitor);
 			break;
 		case IncrementalProjectBuilder.INCREMENTAL_BUILD:
 		case IncrementalProjectBuilder.AUTO_BUILD:
+			if (Utils.hasJavaBuildErrors(getProject())) {
+				return new IProject[0];
+			}
 			final IResourceDelta delta = getDelta(getProject());
 			if (delta == null) {
 				fullBuild(monitor);

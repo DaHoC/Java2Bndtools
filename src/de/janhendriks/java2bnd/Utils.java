@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.bndtools.api.BndtoolsConstants;
 import org.eclipse.core.resources.ICommand;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
@@ -23,6 +24,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -47,7 +49,7 @@ abstract class Utils {
 
 	static final String BUILDER_PROPERTIES_LOCATION = "META-INF/plugin.properties";
 	static final String MANIFEST_LOCATION = "META-INF/MANIFEST.MF";
-	static final boolean DEBUG_OUTPUT = true;
+	static final boolean DEBUG_OUTPUT = false;
 
 	private static final int INTERNAL_ERROR = -10001;
 
@@ -269,6 +271,11 @@ abstract class Utils {
 			 */
 		}
 		return Collections.unmodifiableCollection(selectedProjects);
+	}
+
+	static final boolean hasJavaBuildErrors(final IProject project) throws CoreException {
+		final IMarker[] javaMarkers = project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE);
+		return Stream.of(javaMarkers).anyMatch(marker -> (marker.getAttribute(IMarker.SEVERITY, 0) == IMarker.SEVERITY_ERROR));
 	}
 
 	/**

@@ -2,7 +2,7 @@
 <feature
       id="de.janhendriks.java2bnd.feature"
       label="Java2Bnd feature"
-      version="1.6.0.qualifier">
+      version="1.7.0.qualifier">
 
    <description url="https://gitlab.com/DaHoC/java2bndtools">
       Java to bnd
